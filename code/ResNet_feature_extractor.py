@@ -47,5 +47,4 @@ for path in image_files:
 		features = cuda.to_cpu(features)
     np.savez("%s/%s.npz"%(args.out_dir,name),features.reshape(2048))
     #np.load("%s/%s.npz"%(output_directory,name))['arr_0']
-    break
     i+=1
