@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#python train_caption_model.py
+#python train_caption_model.py --savedir ./experiment2
+
+import argparse
+import numpy as np
+import json
 
 import os
 #os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
@@ -9,13 +13,12 @@ import chainer
 #Check che below is False if you disabled type check
 #print(chainer.functions.Linear(1,1).type_check_enable) 
 
-import argparse
-import numpy as np
 import chainer.functions as F
 from chainer import cuda
 from chainer import Function, FunctionSet, Variable, optimizers, serializers
+
 from code.Image2CaptionDecoder import Image2CaptionDecoder
-import json
+from code.CaptionDataLoader import CaptionDataLoader
 
 #Parse arguments
 parser = argparse.ArgumentParser(description=u"train caption generation model")
@@ -23,7 +26,7 @@ parser.add_argument("-g", "--gpu",default=-1, type=int, help=u"GPU ID.CPU is -1"
 parser.add_argument("--savedir",default="./experiment1", type=str, help=u"The directory to save models and log")
 parser.add_argument('--vocab',default='./data/MSCOCO/mscoco_caption_train2014_processed_dic.json', type=str,help='path to the vocaburary json')
 parser.add_argument('--captions',default='./data/MSCOCO/mscoco_caption_train2014_processed.json', type=str,help='path to preprocessed caption json')
-parser.add_argument('--img_features',default='./data/MSCOCO/train2014_ResNet50_features/', type=str,help='path to the directory containing CNN features')
+parser.add_argument('--image_feature_path',default='./data/MSCOCO/train2014_ResNet50_features/COCO_train2014_', type=str,help='path to the file of CNN features before image_id')
 args = parser.parse_args()
 
 #save dir
@@ -48,6 +51,8 @@ with open(args.vocab, 'r') as f:
 with open(args.captions, 'r') as f:
     captions = json.load(f)
 
+dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=False)
+
 #Model Preparation
 print "preparing caption generation models and training process"
 model=Image2CaptionDecoder(vocaburary_size=len(index2token))
@@ -67,39 +72,41 @@ num_train_data=len(captions)
 
 #Start Training
 print 'training started'
-for epoch in xrange(1):
-    print 'epoch %d' %epoch
-    sum_loss = 0
-    for caption_id in captions:
-        optimizer.zero_grads()
 
-        image_id=captions[caption_id]["image_id"]
-        image_feature=np.load("%sCOCO_train2014_%012d.npz"%(args.img_features,image_id))['arr_0']
-        image_feature=image_feature.reshape(-1,2048)
-        x_batch=[xp.array(captions[caption_id]["token_ids"],dtype=np.int32)]
-        if args.gpu >= 0:
-            image_feature = cuda.to_gpu(image_feature, device=args.gpu)
+sum_loss = 0
+print dataset.epoch
+iterraton = 1
+while (dataset.epoch <= 1):
+    optimizer.zero_grads()
+    current_epoch=dataset.epoch
+    image_feature,x_batch=dataset.get_batch(batch_size)
 
+    if args.gpu >= 0:
+        image_feature = cuda.to_gpu(image_feature, device=args.gpu)
+        x_batch = [cuda.to_gpu(x, device=args.gpu) for x in x_batch]
 
-        hx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-        cx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-        model.input_cnn_feature(hx,cx,image_feature)
-        loss = model(hx, cx, x_batch)
+    hx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+    cx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
+    model.input_cnn_feature(hx,cx,image_feature)
+    loss = model(hx, cx, x_batch)
 
-        print loss.data
-        with open(args.savedir+"/real_loss.txt", "a") as f:
-            f.write(str(loss.data)+'\n') 
+    print loss.data
+    with open(args.savedir+"/real_loss.txt", "a") as f:
+        f.write(str(loss.data)+'\n') 
 
-        loss.backward()
-        optimizer.clip_grads(grad_clip)
-        optimizer.update()
-        
-        sum_loss += loss.data * batch_size
+    loss.backward()
+    optimizer.clip_grads(grad_clip)
+    optimizer.update()
     
-    serializers.save_hdf5(args.savedir+"/caption_model%d.model"%epoch, model)
-    serializers.save_hdf5(args.savedir+"/optimizer%d.model"%epoch, optimizer)
+    sum_loss += loss.data * batch_size
+    iterraton+=1
+    
+    if dataset.epoch - current_epoch > 0:
+        print "epoch:",dataset.epoch
+        serializers.save_hdf5(args.savedir+"/caption_model%d.model"%epoch, model)
+        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%epoch, optimizer)
 
-    mean_loss = sum_loss / num_train_data
-    with open(args.savedir+"/mean_loss.txt", "a") as f:
-        f.write(str(loss.data)+'\n')
-
+        mean_loss = sum_loss / num_train_data
+        with open(args.savedir+"/mean_loss.txt", "a") as f:
+            f.write(str(loss.data)+'\n')
+        sum_loss = 0
