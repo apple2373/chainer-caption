@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#python train_caption_model.py --savedir ./experiment2
+#python train_caption_model.py --savedir ./experiment2 --epoch 10 --batch 256 --gpu 0
 
 import argparse
 import numpy as np
@@ -27,6 +27,9 @@ parser.add_argument("--savedir",default="./experiment1", type=str, help=u"The di
 parser.add_argument('--vocab',default='./data/MSCOCO/mscoco_caption_train2014_processed_dic.json', type=str,help='path to the vocaburary json')
 parser.add_argument('--captions',default='./data/MSCOCO/mscoco_caption_train2014_processed.json', type=str,help='path to preprocessed caption json')
 parser.add_argument('--image_feature_path',default='./data/MSCOCO/train2014_ResNet50_features/COCO_train2014_', type=str,help='path to the file of CNN features before image_id')
+parser.add_argument('--preload',default=False,type=bool,help='preload all image features onto RAM')
+parser.add_argument("--epoch",default=10, type=int, help=u"the number of epochs")
+parser.add_argument("--batch",default=128, type=int, help=u"mini batchsize")
 args = parser.parse_args()
 
 #save dir
@@ -51,7 +54,7 @@ with open(args.vocab, 'r') as f:
 with open(args.captions, 'r') as f:
     captions = json.load(f)
 
-dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=False)
+dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=args.preload)
 
 #Model Preparation
 print "preparing caption generation models and training process"
@@ -66,7 +69,7 @@ optimizer = optimizers.Adam()
 optimizer.setup(model)
 
 #Trining Setting
-batch_size=1
+batch_size=args.batch
 grad_clip = 1.0
 num_train_data=len(captions)
 
@@ -95,6 +98,7 @@ while (dataset.epoch <= 1):
         f.write(str(loss.data)+'\n') 
 
     loss.backward()
+    loss.unchain_backward()
     optimizer.clip_grads(grad_clip)
     optimizer.update()
     
@@ -103,8 +107,8 @@ while (dataset.epoch <= 1):
     
     if dataset.epoch - current_epoch > 0:
         print "epoch:",dataset.epoch
-        serializers.save_hdf5(args.savedir+"/caption_model%d.model"%epoch, model)
-        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%epoch, optimizer)
+        serializers.save_hdf5(args.savedir+"/caption_model%d.model"%dataset.epoch, model)
+        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%dataset.epoch, optimizer)
 
         mean_loss = sum_loss / num_train_data
         with open(args.savedir+"/mean_loss.txt", "a") as f:
