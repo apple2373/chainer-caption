@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 import json
 
+import sys
 import os
 #os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
 import chainer 
@@ -17,8 +18,9 @@ import chainer.functions as F
 from chainer import cuda
 from chainer import Function, FunctionSet, Variable, optimizers, serializers
 
-from code.Image2CaptionDecoder import Image2CaptionDecoder
-from code.CaptionDataLoader import CaptionDataLoader
+sys.path.append('./code')
+from Image2CaptionDecoder import Image2CaptionDecoder
+from CaptionDataLoader import CaptionDataLoader
 
 #Parse arguments
 parser = argparse.ArgumentParser(description=u"train caption generation model")
@@ -79,7 +81,7 @@ print 'training started'
 sum_loss = 0
 print dataset.epoch
 iterraton = 1
-while (dataset.epoch <= 1):
+while (dataset.epoch <= args.epoch):
     optimizer.zero_grads()
     current_epoch=dataset.epoch
     image_feature,x_batch=dataset.get_batch(batch_size)
@@ -88,9 +90,9 @@ while (dataset.epoch <= 1):
         image_feature = cuda.to_gpu(image_feature, device=args.gpu)
         x_batch = [cuda.to_gpu(x, device=args.gpu) for x in x_batch]
 
-    hx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-    cx=xp.zeros((model.n_layers, batch_size, model.hidden_dim), dtype=xp.float32)
-    model.input_cnn_feature(hx,cx,image_feature)
+    hx=xp.zeros((model.n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
+    cx=xp.zeros((model.n_layers, len(x_batch), model.hidden_dim), dtype=xp.float32)
+    hx,cx = model.input_cnn_feature(hx,cx,image_feature)
     loss = model(hx, cx, x_batch)
 
     print loss.data
@@ -105,12 +107,13 @@ while (dataset.epoch <= 1):
     sum_loss += loss.data * batch_size
     iterraton+=1
     
-    if dataset.epoch - current_epoch > 0:
+    if dataset.epoch - current_epoch > 0 or iterraton > 10000:
         print "epoch:",dataset.epoch
-        serializers.save_hdf5(args.savedir+"/caption_model%d.model"%dataset.epoch, model)
-        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%dataset.epoch, optimizer)
+        serializers.save_hdf5(args.savedir+"/caption_model%d.model"%current_epoch, model)
+        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%current_epoch, optimizer)
 
         mean_loss = sum_loss / num_train_data
         with open(args.savedir+"/mean_loss.txt", "a") as f:
             f.write(str(loss.data)+'\n')
         sum_loss = 0
+        iterraton=0
