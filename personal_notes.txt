@@ -1,0 +1,69 @@
+#train English caption
+python train_caption_model.py --savedir ./experiment1 --epoch 10 --batch 256 --gpu 0
+
+#train Chinese caption by machine translation
+python train_caption_model.py --savedir ./experiment1cn --epoch 50 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
+--captions ./data/MSCOCO/captions_train2014_cn_translation_processed.json\
+
+#train Japanese caption by machine translation
+python train_caption_model.py --savedir ./experiment1jp_mt --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/captions_train2014_jp_translation_processed_dic.json \
+--captions ./data/MSCOCO/captions_train2014_jp_translation_processed.json\
+--preload True
+
+#train Japanese caption by Yahoo's 
+python train_caption_model.py --savedir ./experiment1jp_yj --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
+--captions ./data/MSCOCO/yjcaptions26k_clean_processed.json \
+--preload True
+
+#preprocess captions
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014.json \
+--output ../data/MSCOCO/mscoco_caption_train2014_processed.json \
+--outdic ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
+--outfreq ../data/MSCOCO/mscoco_caption_train2014_processed_freq.json #this is just internal file
+
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/yjcaptions26k_clean.json \
+--output ../data/MSCOCO/yjcaptions26k_clean_processed.json \
+--outdic ../data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
+--outfreq ../data/MSCOCO/yjcaptions26k_clean_processed_freq.json \
+--cut 0 \
+--char True \
+
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014_cn_translation.json \
+--output ../data/MSCOCO/captions_train2014_cn_translation_processed.json \
+--outdic ../data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
+--outfreq ../data/MSCOCO/captions_train2014_cn_translation_processed_freq.json \
+--cut 5 \
+--char True \
+
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014_jp_translation.json \
+--output ../data/MSCOCO/captions_train2014_jp_translation_processed.json \
+--outdic ../data/MSCOCO/captions_train2014_jp_translation_processed_dic.json \
+--outfreq ../data/MSCOCO/captions_train2014_jp_translation_processed_freq.json \
+--cut 5 \
+--char True \
+
+#greedy
+python sample_code.py  --rnn-model ./experiment1/caption_model1.model --img ./sample_imgs/COCO_val2014_000000185546.jpg
+python sample_code.py  --rnn-model ./experiment1jp/caption_model1.model --vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json --img ./sample_imgs/COCO_val2014_000000241747.jpg
+python sample_code.py  --rnn-model ./experiment1cn/caption_model10.model --vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json --img ./sample_imgs/COCO_val2014_000000185546.jpg
+
+#beam
+python sample_code_beam.py  --rnn-model ./experiment1/caption_model10.model --img ./sample_imgs/COCO_val2014_000000185546.jpg
+python sample_code_beam.py  --rnn-model ./experiment1jp/caption_model10.model --vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json --img ./sample_imgs/COCO_val2014_000000241747.jpg
+python sample_code_beam.py  --rnn-model ./experiment1cn/caption_model10.model --vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json --img ./sample_imgs/COCO_val2014_000000185546.jpg
+
+#webapp
+python server.py --rnn-model ../experiment1/caption_model20.model --cnn-model ../data/ResNet50.model --vocab ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json
+
+#server
+cd webapi
+python server.py --rnn-model ../experiment1/caption_model20.model --cnn-model ../data/ResNet50.model --vocab ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json --beam 3
+cd sample_imgs/
+ curl -X POST -F image=@dog.jpg http://localhost:8090/predict

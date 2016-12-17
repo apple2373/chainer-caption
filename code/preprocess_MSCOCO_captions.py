@@ -9,27 +9,14 @@ from collections import Counter,OrderedDict
 from itertools import chain
 
 '''
+e.g. 
+
 python preprocess_MSCOCO_captions.py \
 --input ../data/MSCOCO/captions_train2014.json \
 --output ../data/MSCOCO/mscoco_caption_train2014_processed.json \
 --outdic ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
 --outfreq ../data/MSCOCO/mscoco_caption_train2014_processed_freq.json #this is just internal file
 
-python preprocess_MSCOCO_captions.py \
---input ../data/MSCOCO/yjcaptions26k_clean.json \
---output ../data/MSCOCO/yjcaptions26k_clean_processed.json \
---outdic ../data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
---outfreq ../data/MSCOCO/yjcaptions26k_clean_processed_freq.json \
---cut 0 \
---char True \
-
-python preprocess_MSCOCO_captions.py \
---input ../data/MSCOCO/captions_train2014_cn_translation.json \
---output ../data/MSCOCO/captions_train2014_cn_translation_processed.json \
---outdic ../data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
---outfreq ../data/MSCOCO/captions_train2014_cn_translation_processed_freq.json \
---cut 5 \
---char True \
 '''
 
 def read_MSCOCO_json(file_place,args):

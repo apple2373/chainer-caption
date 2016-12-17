@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-python train_caption_model.py --savedir ./experiment2 --epoch 10 --batch 256 --gpu 0
-python train_caption_model.py --savedir ./experiment1jp --epoch 50 --batch 16 --gpu 0 \
---vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
---captions ./data/MSCOCO/yjcaptions26k_clean_processed.json \
-python train_caption_model.py --savedir ./experiment1cn --epoch 50 --batch 120 --gpu 0 \
---vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
---captions ./data/MSCOCO/captions_train2014_cn_translation_processed.json\
+training code
 '''
 
 import argparse

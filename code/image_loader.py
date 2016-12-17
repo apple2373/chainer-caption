@@ -30,9 +30,17 @@ class Image_loader(object):
  
     def load(self,image_path,image_w=224,image_h=224,expand_batch_dim=True):
         '''
+        given path, load and resize.
         the output will be croped image whose size is image_w x image_h
         '''
         image = Image.open(image_path).convert('RGB')
+        return self.resise(image,image_w,image_h,expand_batch_dim)
+
+    def resise(self,image,image_w=224,image_h=224,expand_batch_dim=True):
+        '''
+        given image numpy array, resize
+        the output will be croped image whose size is image_w x image_h
+        '''
         w, h = image.size
         if w > h:
             shape = (image_w * w / h, image_h)
