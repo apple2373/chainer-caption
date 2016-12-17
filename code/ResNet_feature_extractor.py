@@ -2,6 +2,7 @@
 # coding: UTF-8
 
 #python ResNet_feature_extractor.py --img-dir ../data/MSCOCO/train2014 --out-dir ../data/MSCOCO/train2014_ResNet50_features
+#python ResNet_feature_extractor.py --img-dir ../data/MSCOCO/val2014 --out-dir ../data/MSCOCO/val2014_ResNet50_features
 
 import os
 import numpy as np

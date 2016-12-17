@@ -3,7 +3,8 @@
 
 '''
 Sample code to generate caption
-python sample_code.py  --rnn-model ./experiment1/caption_model1.model
+python sample_code.py  --rnn-model ./experiment1/caption_model1.model --img ./sample_imgs/COCO_val2014_000000185546.jpg
+python sample_code.py  --rnn-model ./experiment1jp/caption_model1.model --vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json --img ./sample_imgs/COCO_val2014_000000241747.jpg
 '''
 import sys
 import json
@@ -63,7 +64,7 @@ word=[xp.array([token2index["<sos>"]],dtype=xp.int32)]
 for i in xrange(50):	
 	hx, cx, word = rnn_model(hx, cx, word)
 	word_idx=np.argmax(word[0].data)
-	print index2token[word_idx]
+	print index2token[word_idx],
 	word=[xp.array([word_idx],dtype=xp.int32)]
 	if token2index["<eos>"]==word_idx:
 		break

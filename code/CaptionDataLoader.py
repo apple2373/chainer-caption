@@ -24,6 +24,7 @@ class CaptionDataLoader(object):
         if self.index_count > len(self.captions):
             self.epoch+=1
             self.suffle_data()
+            self.index_count=0
 
         #sorry the following lines are so complicated...
         #this is just loading preprocessed images features and captions for this batch

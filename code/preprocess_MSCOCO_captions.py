@@ -14,9 +14,25 @@ python preprocess_MSCOCO_captions.py \
 --output ../data/MSCOCO/mscoco_caption_train2014_processed.json \
 --outdic ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
 --outfreq ../data/MSCOCO/mscoco_caption_train2014_processed_freq.json #this is just internal file
+
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/yjcaptions26k_clean.json \
+--output ../data/MSCOCO/yjcaptions26k_clean_processed.json \
+--outdic ../data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
+--outfreq ../data/MSCOCO/yjcaptions26k_clean_processed_freq.json \
+--cut 0 \
+--char True \
+
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014_cn_translation.json \
+--output ../data/MSCOCO/captions_train2014_cn_translation_processed.json \
+--outdic ../data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
+--outfreq ../data/MSCOCO/captions_train2014_cn_translation_processed_freq.json \
+--cut 5 \
+--char True \
 '''
 
-def read_MSCOCO_json(file_place):
+def read_MSCOCO_json(file_place,args):
         
     f = open(file_place, 'r')
     jsonData = json.load(f)
@@ -37,7 +53,10 @@ def read_MSCOCO_json(file_place):
             caption=caption[0:-1]
 
         caption_tokens=['<sos>']
-        caption_tokens += nltk.word_tokenize(caption)
+        if args.char:
+            caption_tokens += list(caption)
+        else:
+            caption_tokens += nltk.word_tokenize(caption)
         caption_tokens.append("<eos>")
         
         captions[caption_id]={}
@@ -53,10 +72,12 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str,help='the place of output file')
     parser.add_argument('--outdic', type=str,help='the place of output dictonary file')
     parser.add_argument('--outfreq', type=str,help='the place of output frequency map file')
+    parser.add_argument('--char', default = False,type=bool,help='character based tokenization. e.g. for Japanese')
+    parser.add_argument('--cut', default = 5,type=int,help='cut off frequency')
     args = parser.parse_args()
 
     #load jsonfile
-    captions=read_MSCOCO_json(args.input)
+    captions=read_MSCOCO_json(args.input,args)
 
     #count word frequencies
     texts=[captions[caption_id]['tokens'] for caption_id in captions]
@@ -71,7 +92,7 @@ if __name__ == '__main__':
     print "total distinct words:",len(freq_count)
 
     #remove words that appears less than 5
-    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= 5]
+    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
     id2word.append("<ukn>")
     word2id = {id2word[i]:i for i in xrange(len(id2word))}
 
