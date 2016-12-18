@@ -80,3 +80,4 @@ cd sample_imgs/
  #evalluate
  python generate_caption.py  --rnn-model ../experiment1/caption_model1.model -g 0 --beam 1 --output ../experiment1/caption_model_val_predicted.json
 
+ python generate_caption.py  --rnn-model ../data/caption_model1.model -g 0 --beam 3 --output ../en.json

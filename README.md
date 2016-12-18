@@ -1,15 +1,17 @@
 #image caption generation by chainer 
 
-This repository contains an implementation of typical image caption generation based on neural network. The model first extracts the image feature by CNN and then generates captions by RNN.CNN is ResNet50 and RNN is a simple LSTM network.
+This repository contains an implementation of typical image caption generation based on neural network (i.e. CNN + RNN). The model first extracts the image feature by CNN and then generates captions by RNN. CNN is ResNet50 and RNN is a standard LSTM .
 
 The training data is MSCOCO. I preprocessed MSCOCO images by extracting CNN features in advance. Then I trained the language model to generate captions. Not only English, I trained on Japanese and Chinese. 
 
 I made pre-trained models available. For English captions, the model achieves CIDEr of XXX for the MSCOCO validation dataset. If we use beam search, the score increases a little bit. To achieve the better score, CNN has to be fine-tuned, but I haven’t tried because it’s computationally heavier.  
 
+<img src=".samples.png" >
+
 ##requirement
-chainer 1.18.0  http://chainer.org
+chainer 1.19.0  http://chainer.org
 and some more packages.  
-!!Warning ** Be sure to use chainer 1.18.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
+!!Warning ** Be sure to use chainer 1.19.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
 If you are new, I strongly recoomend Anaconda (https://www.continuum.io/downloads) and then install chainer.  
 
 ##I just want to generate caption!
@@ -64,7 +66,7 @@ python server.py --rnn-model ../data/caption_en_model40.model \
 --vocab ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
 --gpu -1 \
 
-curl -X POST -F image=@./sample_img/COCO_val2014_000000185546.jpg http://localhost:8090/predict
+curl -X POST -F image=@./sample_imgs/COCO_val2014_000000185546.jpg http://localhost:8090/predict
 #you should get json
 ```
 
@@ -85,8 +87,10 @@ python train_caption_model.py --savedir ./experiment1 --epoch 40 --batch 120 --g
 Alright, you need to do additional amount of work.
 ```
 cd code
-#extract features using ResNet50
-python ResNet_feature_extractor.py --img-dir ../data/MSCOCO/train2014 --out-dir ../data/MSCOCO/train2014_ResNet50_features —-g -1
+#extract features using ResNet50 \
+python ResNet_feature_extractor.py --img-dir ../data/MSCOCO/train2014 \
+ --out-dir ../data/MSCOCO/train2014_ResNet50_features \
+  --gpu -1
 ```
 `--gpu` is GPU id (-1 is CPU).`—img-dir` is the directory that you stores images. `—out-dir` is the directory that the ResNet features will be saved. The file name will be the same, but extension is “.npz”.   
 ```
