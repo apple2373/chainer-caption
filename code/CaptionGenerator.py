@@ -100,38 +100,6 @@ class CaptionGenerator(object):
 
         return hy, cy, k_best_next_sentences
 
-
-
-    def beam_search_one_step(self,sentence_candidates,final_sentences,depth=1):
-        next_sentence_candidates_temp=[]
-        for state in sentence_candidates:
-            hy, cy, k_best_next_states = self.successor(state)
-            next_sentence_candidates_temp+=k_best_next_states
-
-        top_k_states=heapq.nsmallest(self.beamsize, next_sentence_candidates_temp, key=lambda x : x["cost"])
-
-        next_sentence_candidates=[]
-        for state in top_k_states:
-            #is goal state? -> yes, then end the search
-            if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
-                state["hx"]=None
-                state["cx"]=None
-                final_sentences.append(state)
-            else:
-                next_sentence_candidates.append(state)
-
-        if len(final_sentences)>=self.beamsize:
-            return final_sentences
-        elif depth==self.depth_limit:
-            return final_sentences
-        else:
-            depth+=1
-            return self.beam_search_one_step(next_sentence_candidates,final_sentences,depth)
-
-    def beam_search2(self,initial_state):
-        #imitate what i did before it works
-        return self.beam_search_one_step([initial_state],final_sentences=[],depth=0)
-
     def beam_search(self,initial_state):
         #somethig is wrong....
         #is does not return the best one ....
@@ -170,41 +138,6 @@ class CaptionGenerator(object):
                     found_paths.append(state)
                 else:
                     top_k_states.append(state)
-
-        return sorted(found_paths, key=lambda x: x["cost"]) 
-
-    def beam_search1(self,initial_state):
-        #somethig is wrong....
-        #is does not return the best one ....
-        '''
-        Beam search is a graph search algorithm! So I use graph search abstraction
-
-        Args:
-            initial state: an initial stete, python tuple (hx,cx,path,cost)
-            each state has 
-                hx: hidden states
-                cx: cell states
-                path: word indicies so far as a python list  e.g. initial is self.token2index["<sos>"]
-                cost: negative log likelihood
-
-        Returns:
-            captions sorted by the cost (i.e. negative log llikelihood)
-        '''
-        found_paths=[]
-        top_k_states=[initial_state]
-        while (len(found_paths) < self.beamsize):
-            state=top_k_states.pop()
-            #is goal state? -> yes, then end the search
-            if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
-                state["hx"]=None
-                state["cx"]=None
-                found_paths.append(state)
-                continue
-            #examine to next five possible states and add to priority queue 
-            hy, cy, k_best_next_states = self.successor(state)
-            for next_state in k_best_next_states:
-                top_k_states.append(next_state)
-            top_k_states=heapq.nsmallest(self.beamsize, top_k_states, key=lambda x : x["cost"])
 
         return sorted(found_paths, key=lambda x: x["cost"]) 
 
