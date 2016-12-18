@@ -9,11 +9,7 @@ beam search might have a small bug or not the most efficient, but seems to be ok
 '''
 
 import os
-#comment out the below if you want to do type check. Remeber this have to be done BEFORE import chainer
-#os.environ["CHAINER_TYPE_CHECK"] = "0" 
 import chainer 
-#If the below is false, the type check is disabled. 
-#print(chainer.functions.Linear(1,1).type_check_enable) 
 
 import numpy as np
 import json
@@ -35,6 +31,8 @@ try:
     import Queue as Q  # ver. < 3.0
 except ImportError:
     import queue as Q
+
+import heapq
 
 class CaptionGenerator(object):
     def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1):
@@ -62,6 +60,8 @@ class CaptionGenerator(object):
         if self.gpu_id >= 0:
             xp = cuda.cupy 
             cuda.get_device(gpu_id).use()
+            self.cnn_model.to_gpu()
+            self.rnn_model.to_gpu()
         else:
             xp=np
 
@@ -87,7 +87,7 @@ class CaptionGenerator(object):
         word_dist=F.softmax(next_words[0]).data[0]#possible next word distributions
         k_best_next_sentences=[]
         for i in xrange(self.beamsize):
-            next_word_idx=xp.argmax(word_dist)
+            next_word_idx=int(xp.argmax(word_dist))
             k_best_next_sentences.append(\
                 {\
                 "hidden":hy,\
@@ -100,7 +100,41 @@ class CaptionGenerator(object):
 
         return hy, cy, k_best_next_sentences
 
+
+
+    def beam_search_one_step(self,sentence_candidates,final_sentences,depth=1):
+        next_sentence_candidates_temp=[]
+        for state in sentence_candidates:
+            hy, cy, k_best_next_states = self.successor(state)
+            next_sentence_candidates_temp+=k_best_next_states
+
+        top_k_states=heapq.nsmallest(self.beamsize, next_sentence_candidates_temp, key=lambda x : x["cost"])
+
+        next_sentence_candidates=[]
+        for state in top_k_states:
+            #is goal state? -> yes, then end the search
+            if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
+                state["hx"]=None
+                state["cx"]=None
+                final_sentences.append(state)
+            else:
+                next_sentence_candidates.append(state)
+
+        if len(final_sentences)>=self.beamsize:
+            return final_sentences
+        elif depth==self.depth_limit:
+            return final_sentences
+        else:
+            depth+=1
+            return self.beam_search_one_step(next_sentence_candidates,final_sentences,depth)
+
+    def beam_search2(self,initial_state):
+        #imitate what i did before it works
+        return self.beam_search_one_step([initial_state],final_sentences=[],depth=0)
+
     def beam_search(self,initial_state):
+        #somethig is wrong....
+        #is does not return the best one ....
         '''
         Beam search is a graph search algorithm! So I use graph search abstraction
 
@@ -112,6 +146,79 @@ class CaptionGenerator(object):
                 path: word indicies so far as a python list  e.g. initial is self.token2index["<sos>"]
                 cost: negative log likelihood
 
+        Returns:
+            captions sorted by the cost (i.e. negative log llikelihood)
+        '''
+        found_paths=[]
+        top_k_states=[initial_state]
+        while (len(found_paths) < self.beamsize):
+            #forward one step for all top k states, then only select top k after that
+            new_top_k_states=[]
+            for state in top_k_states:
+                #examine to next five possible states
+                hy, cy, k_best_next_states = self.successor(state)
+                for next_state in k_best_next_states:
+                    new_top_k_states.append(next_state)
+            selected_top_k_states=heapq.nsmallest(self.beamsize, new_top_k_states, key=lambda x : x["cost"])
+
+            top_k_states=[]
+            for state in selected_top_k_states:
+                #is goal state? -> yes, then end the search
+                if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
+                    state["hx"]=None
+                    state["cx"]=None
+                    found_paths.append(state)
+                else:
+                    top_k_states.append(state)
+
+        return sorted(found_paths, key=lambda x: x["cost"]) 
+
+    def beam_search1(self,initial_state):
+        #somethig is wrong....
+        #is does not return the best one ....
+        '''
+        Beam search is a graph search algorithm! So I use graph search abstraction
+
+        Args:
+            initial state: an initial stete, python tuple (hx,cx,path,cost)
+            each state has 
+                hx: hidden states
+                cx: cell states
+                path: word indicies so far as a python list  e.g. initial is self.token2index["<sos>"]
+                cost: negative log likelihood
+
+        Returns:
+            captions sorted by the cost (i.e. negative log llikelihood)
+        '''
+        found_paths=[]
+        top_k_states=[initial_state]
+        while (len(found_paths) < self.beamsize):
+            state=top_k_states.pop()
+            #is goal state? -> yes, then end the search
+            if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
+                state["hx"]=None
+                state["cx"]=None
+                found_paths.append(state)
+                continue
+            #examine to next five possible states and add to priority queue 
+            hy, cy, k_best_next_states = self.successor(state)
+            for next_state in k_best_next_states:
+                top_k_states.append(next_state)
+            top_k_states=heapq.nsmallest(self.beamsize, top_k_states, key=lambda x : x["cost"])
+
+        return sorted(found_paths, key=lambda x: x["cost"]) 
+
+    def beam_search0(self,initial_state):
+        #original one. this is correct, but it takes much memory
+        '''
+        Beam search is a graph search algorithm! So I use graph search abstraction
+        Args:
+            initial state: an initial stete, python tuple (hx,cx,path,cost)
+            each state has 
+                hx: hidden states
+                cx: cell states
+                path: word indicies so far as a python list  e.g. initial is self.token2index["<sos>"]
+                cost: negative log likelihood
         Returns:
             captions sorted by the cost (i.e. negative log llikelihood)
         '''
@@ -145,24 +252,13 @@ class CaptionGenerator(object):
         img=self.image_loader.load(image_file_path)
         return self.generate_from_img(img)
 
+    def generate_from_img_feature(self,image_feature):
+        if self.gpu_id >= 0:
+            image_feature=cuda.to_gpu(image_feature)
 
-    def generate_from_img(self,image_array):
-        '''Generate Caption for an Numpy Image array
-        
-        Args:
-            image_array: numpy array of image
-
-        Returns:
-            list of generated captions, sorted by the cost (i.e. negative log llikelihood)
-
-            The structure is [caption,caption,caption,...]
-            Where caption = {"sentence": a generated sentence as a python list of word, "log_likelihood": The log llikelihood of the generated sentence} 
-
-        '''
         batch_size=1
         hx=xp.zeros((self.rnn_model.n_layers, batch_size, self.rnn_model.hidden_dim), dtype=xp.float32)
         cx=xp.zeros((self.rnn_model.n_layers, batch_size, self.rnn_model.hidden_dim), dtype=xp.float32)
-        image_feature=self.cnn_model(image_array, "feature").data.reshape(1,1,2048)#次元が一つ多いのは、NstepLSTMはsequaenceとみなすから。(sequence size, batch size, feature dim)ということ
         
         hy,cy = self.rnn_model.input_cnn_feature(hx,cx,image_feature)
         initial_state={\
@@ -179,7 +275,27 @@ class CaptionGenerator(object):
             sentence= [self.index2token[word_idx] for word_idx in caption["path"]]
             log_likelihood = -caption["cost"]#cost is the negative log likelihood
             caption_candidates.append({"sentence":sentence,"log_likelihood":log_likelihood})
+
         return caption_candidates
+
+    def generate_from_img(self,image_array):
+        '''Generate Caption for an Numpy Image array
+        
+        Args:
+            image_array: numpy array of image
+
+        Returns:
+            list of generated captions, sorted by the cost (i.e. negative log llikelihood)
+
+            The structure is [caption,caption,caption,...]
+            Where caption = {"sentence": a generated sentence as a python list of word, "log_likelihood": The log llikelihood of the generated sentence} 
+
+        '''
+        if self.gpu_id >= 0:
+            image_array=cuda.to_gpu(image_array)
+        image_feature=self.cnn_model(image_array, "feature").data.reshape(1,1,2048)#次元が一つ多いのは、NstepLSTMはsequaenceとみなすから。(sequence size, batch size, feature dim)ということ
+
+        return self.generate_from_img_feature(image_feature)
 
 if __name__ == '__main__':
     xp=np

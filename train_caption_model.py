@@ -24,7 +24,7 @@ from Image2CaptionDecoder import Image2CaptionDecoder
 from CaptionDataLoader import CaptionDataLoader
 
 #Parse arguments
-parser = argparse.ArgumentParser(description=u"train caption generation model")
+parser = argparse.ArgumentParser()
 parser.add_argument("-g", "--gpu",default=-1, type=int, help=u"GPU ID.CPU is -1")
 parser.add_argument("--savedir",default="./experiment1", type=str, help=u"The directory to save models and log")
 parser.add_argument('--vocab',default='./data/MSCOCO/mscoco_caption_train2014_processed_dic.json', type=str,help='path to the vocaburary json')

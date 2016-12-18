@@ -75,7 +75,7 @@ def predict():
 
 if __name__ == '__main__':
     #Parse arguments
-    parser = argparse.ArgumentParser(description=u"train caption generation model")
+    parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gpu",default=-1, type=int, help=u"GPU ID.CPU is -1")
     parser.add_argument('--vocab',default='./data/MSCOCO/mscoco_caption_train2014_processed_dic.json', type=str,help='path to the vocaburary json')
     parser.add_argument('--cnn-model', type=str, default='./data/ResNet50.model',help='place of the ResNet model')
