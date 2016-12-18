@@ -6,7 +6,7 @@ The training data is MSCOCO. I preprocessed MSCOCO images by extracting CNN feat
 
 I made pre-trained models available. For English captions, the model achieves CIDEr of XXX for the MSCOCO validation dataset. If we use beam search, the score increases a little bit. To achieve the better score, CNN has to be fine-tuned, but I haven’t tried because it’s computationally heavier.  
 
-<img src=".samples.png" >
+<img src="samples.png" >
 
 ##requirement
 chainer 1.19.0  http://chainer.org
