@@ -5,7 +5,7 @@ if [ ! -f ResNet50.model ]; then
   wget https://www.dropbox.com/s/eqdmml7kj3545sv/ResNet50.model 
 fi
 if [ ! -f caption_cn_model40.model ]; then
-  wegt https://www.dropbox.com/s/680hubm829hjhii/caption_cn_model40.model
+  wget https://www.dropbox.com/s/680hubm829hjhii/caption_cn_model40.model
 fi
 if [ ! -f caption_en_model40.model ]; then
   wget https://www.dropbox.com/s/sy4ayrvush0bqle/caption_en_model40.model

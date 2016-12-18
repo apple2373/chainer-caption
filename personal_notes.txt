@@ -55,6 +55,15 @@ python sample_code.py  --rnn-model ./experiment1jp/caption_model1.model --vocab 
 python sample_code.py  --rnn-model ./experiment1cn/caption_model10.model --vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json --img ./sample_imgs/COCO_val2014_000000185546.jpg
 
 #beam
+python sample_code_beam.py \
+--rnn-model ./data/caption_en_model40.model \
+--cnn-model ./data/ResNet50.model \
+--vocab ./data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
+--gpu -1 \
+--img ./sample_imgs/COCO_val2014_000000185546.jpg \
+
+
+
 python sample_code_beam.py  --rnn-model ./experiment1/caption_model10.model --img ./sample_imgs/COCO_val2014_000000185546.jpg
 python sample_code_beam.py  --rnn-model ./experiment1jp/caption_model10.model --vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json --img ./sample_imgs/COCO_val2014_000000241747.jpg
 python sample_code_beam.py  --rnn-model ./experiment1cn/caption_model10.model --vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json --img ./sample_imgs/COCO_val2014_000000185546.jpg
@@ -67,3 +76,7 @@ cd webapi
 python server.py --rnn-model ../experiment1/caption_model20.model --cnn-model ../data/ResNet50.model --vocab ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json --beam 3
 cd sample_imgs/
  curl -X POST -F image=@dog.jpg http://localhost:8090/predict
+ 
+ #evalluate
+ python generate_caption.py  --rnn-model ../experiment1/caption_model1.model -g 0 --beam 1 --output ../experiment1/caption_model_val_predicted.json
+

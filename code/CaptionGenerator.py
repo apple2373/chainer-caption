@@ -134,8 +134,6 @@ class CaptionGenerator(object):
             for state in selected_top_k_states:
                 #is goal state? -> yes, then end the search
                 if state["path"][-1] == self.token2index["<eos>"] or len(state["path"])==self.depth_limit:
-                    state["hx"]=None
-                    state["cx"]=None
                     found_paths.append(state)
                 else:
                     top_k_states.append(state)
@@ -207,7 +205,7 @@ class CaptionGenerator(object):
         caption_candidates=[]
         for caption in captions:
             sentence= [self.index2token[word_idx] for word_idx in caption["path"]]
-            log_likelihood = -caption["cost"]#cost is the negative log likelihood
+            log_likelihood = -float(caption["cost"])#cost is the negative log likelihood
             caption_candidates.append({"sentence":sentence,"log_likelihood":log_likelihood})
 
         return caption_candidates
