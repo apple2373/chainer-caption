@@ -129,6 +129,7 @@ class CaptionGenerator(object):
                     new_top_k_states.append(next_state)
             selected_top_k_states=heapq.nsmallest(self.beamsize, new_top_k_states, key=lambda x : x["cost"])
 
+            #within the selected states, let's check if it is terminal or not.
             top_k_states=[]
             for state in selected_top_k_states:
                 #is goal state? -> yes, then end the search
