@@ -58,6 +58,7 @@ See the file for the meaning of options.
 ## I want to run caption generation module as a web API.
 I have a simple script for that.
 ```
+cd webapi
 python server.py --rnn-model ../data/caption_en_model40.model \
 --cnn-model ../data/ResNet50.model \
 --vocab ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
@@ -74,7 +75,6 @@ I made preprocessed files available. You can download like this.
 bash download.sh train
 ```
 Then you can train like this.
-```
 ```
 python train_caption_model.py --savedir ./experiment1 --epoch 40 --batch 120 --gpu -1 \
 --vocab ./data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
