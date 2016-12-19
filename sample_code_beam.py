@@ -35,7 +35,7 @@ args = parser.parse_args()
 
 caption_generator=CaptionGenerator(
     rnn_model_place=args.rnn_model,\
-    cnn_model_place=args.cnn_model,\
+    cnn_model_place=args.cnn_model,
     dictonary_place=args.vocab,\
     beamsize=args.beam,\
     depth_limit=args.depth,\

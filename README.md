@@ -4,7 +4,7 @@ This repository contains an implementation of typical image caption generation b
 
 The training data is MSCOCO. I preprocessed MSCOCO images by extracting CNN features in advance. Then I trained the language model to generate captions. Not only English, I trained on Japanese and Chinese. 
 
-I made pre-trained models available. For English captions, the model achieves CIDEr of 0.692 for the MSCOCO validation dataset. If we use beam search, the score increases a little bit. To achieve the better score, CNN has to be fine-tuned, but I haven’t tried because it’s computationally heavier.  
+I made pre-trained models available. For English captions, the model achieves CIDEr of 0.692 for the MSCOCO validation dataset. Other evaluation score is ( Bleu1: 0.657,  Bleu2: 0.471, Bleu3: 0.327, Bleu4: 0.228,  METEOR: 0.213, ROUGE_L: 0.47). If we use beam search, the score increases a little bit. To achieve the better score, CNN has to be fine-tuned, but I haven’t tried because it’s computationally heavier.  
 
 <img src="sample.png" >
 

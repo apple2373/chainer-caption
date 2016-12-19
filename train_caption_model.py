@@ -12,8 +12,6 @@ import sys
 import os
 #os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
 import chainer 
-#Check che below is False if you disabled type check
-#print(chainer.functions.Linear(1,1).type_check_enable) 
 
 import chainer.functions as F
 from chainer import cuda

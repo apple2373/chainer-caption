@@ -36,8 +36,7 @@ import heapq
 
 class CaptionGenerator(object):
     def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1):
-        #basic paramaters you need to modify
-        self.gpu_id=gpu_id# GPU ID. if you want to use cpu, -1
+        self.gpu_id=gpu_id
         self.beamsize=beamsize
         self.depth_limit=depth_limit
         self.image_loader=Image_loader(mean="imagenet")
@@ -55,7 +54,6 @@ class CaptionGenerator(object):
         self.rnn_model.train = False
 
         #Gpu Setting
-        #model to gpu?
         global xp
         if self.gpu_id >= 0:
             xp = cuda.cupy 
@@ -101,8 +99,6 @@ class CaptionGenerator(object):
         return hy, cy, k_best_next_sentences
 
     def beam_search(self,initial_state):
-        #somethig is wrong....
-        #is does not return the best one ....
         '''
         Beam search is a graph search algorithm! So I use graph search abstraction
 
@@ -141,7 +137,7 @@ class CaptionGenerator(object):
         return sorted(found_paths, key=lambda x: x["cost"]) 
 
     def beam_search0(self,initial_state):
-        #original one. this is correct, but it takes much memory
+        #original one. This takes much memory
         '''
         Beam search is a graph search algorithm! So I use graph search abstraction
         Args:
