@@ -8,11 +8,15 @@ I made pre-trained models available. For English captions, the model achieves CI
 
 <img src="sample.png" >
 
-##requirement
+##requirements
 chainer 1.19.0  http://chainer.org
 and some more packages.  
 !!Warning ** Be sure to use chainer 1.19.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
 If you are new, I strongly recoomend Anaconda (https://www.continuum.io/downloads) and then install chainer.  
+```
+#After installing anaconda, you can install chainer, sepcifically, version1.19.0,  in this way. 
+pip install chainer==1.19.0 
+```
 
 ##I just want to generate caption!
 OK, first, you need to download the models and other preprocessed files.
