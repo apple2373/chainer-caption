@@ -28,6 +28,7 @@ parser.add_argument("--savedir",default="./experiment1", type=str, help=u"The di
 parser.add_argument('--vocab',default='./data/MSCOCO/mscoco_caption_train2014_processed_dic.json', type=str,help='path to the vocaburary json')
 parser.add_argument('--captions',default='./data/MSCOCO/mscoco_caption_train2014_processed.json', type=str,help='path to preprocessed caption json')
 parser.add_argument('--image_feature_path',default='./data/MSCOCO/train2014_ResNet50_features/COCO_train2014_', type=str,help='path to the file of CNN features before image_id')
+parser.add_argument('--filename_img_id',default=False,type=bool,help='image id is filename')
 parser.add_argument('--preload',default=False,type=bool,help='preload all image features onto RAM')
 parser.add_argument("--epoch",default=10, type=int, help=u"the number of epochs")
 parser.add_argument("--batch",default=128, type=int, help=u"mini batchsize")
@@ -55,7 +56,8 @@ with open(args.vocab, 'r') as f:
 with open(args.captions, 'r') as f:
     captions = json.load(f)
 
-dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=args.preload)
+dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,\
+    preload_all_features=args.preload, filename_img_id=args.filename_img_id)
 
 #Model Preparation
 print "preparing caption generation models and training process"

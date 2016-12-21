@@ -7,7 +7,7 @@
 import numpy as np
 
 class CaptionDataLoader(object):
-    def __init__(self, captions,image_feature_path,preload_all_features=False):
+    def __init__(self, captions,image_feature_path,preload_all_features=False,filename_img_id=False):
         self.captions = captions
         self.image_feature_path=image_feature_path#path before image id. e.g. ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_
         self.caption_ids = captions.keys()
@@ -15,8 +15,14 @@ class CaptionDataLoader(object):
         self.index_count=0
         self.epoch=1
         self.preload_all_features=preload_all_features
+        self.filename_img_id=filename_img_id
         if  self.preload_all_features:
-            self.image_features=np.array([np.load("%s%012d.npz"%(self.image_feature_path,self.captions[caption_id]["image_id"]))['arr_0'] for caption_id in self.caption_ids])
+            if self.filename_img_id:
+                self.image_features=np.array([np.load("%s/%s.npz"%(self.image_feature_path,self.captions[caption_id]["image_id"]))['arr_0'] for caption_id in self.caption_ids])
+            else:
+                self.image_features=np.array([np.load("%s%012d.npz"%(self.image_feature_path,self.captions[caption_id]["image_id"]))['arr_0'] for caption_id in self.caption_ids])
+
+
 
     def get_batch(self,batch_size):
         batch_data_indicies=self.random_indicies[self.index_count:self.index_count+batch_size]
@@ -31,7 +37,10 @@ class CaptionDataLoader(object):
         if self.preload_all_features:
             batch_image_features=self.image_features[batch_data_indicies]
         else:
-            batch_image_features=np.array([np.load("%s%012d.npz"%(self.image_feature_path,self.captions[self.caption_ids[i]]["image_id"]))['arr_0'] for i in batch_data_indicies])
+            if self.filename_img_id:
+                batch_image_features=np.array([np.load("%s/%s.npz"%(self.image_feature_path,self.captions[self.caption_ids[i]]["image_id"]))['arr_0'] for i in batch_data_indicies])
+            else:
+                batch_image_features=np.array([np.load("%s%012d.npz"%(self.image_feature_path,self.captions[self.caption_ids[i]]["image_id"]))['arr_0'] for i in batch_data_indicies])
         
         batch_word_indices=[np.array(self.captions[self.caption_ids[i]]["token_ids"],dtype=np.int32) for i in batch_data_indicies]
 
