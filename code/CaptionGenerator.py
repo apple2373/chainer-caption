@@ -35,7 +35,7 @@ except ImportError:
 import heapq
 
 class CaptionGenerator(object):
-    def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1):
+    def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1,first_word="<sos>"):
         self.gpu_id=gpu_id
         self.beamsize=beamsize
         self.depth_limit=depth_limit
@@ -52,6 +52,8 @@ class CaptionGenerator(object):
         self.rnn_model=Image2CaptionDecoder(len(self.token2index))
         serializers.load_hdf5(rnn_model_place, self.rnn_model)
         self.rnn_model.train = False
+
+        self.first_word=first_word
 
         #Gpu Setting
         global xp
@@ -180,6 +182,7 @@ class CaptionGenerator(object):
         img=self.image_loader.load(image_file_path)
         return self.generate_from_img(img)
 
+
     def generate_from_img_feature(self,image_feature):
         if self.gpu_id >= 0:
             image_feature=cuda.to_gpu(image_feature)
@@ -189,10 +192,12 @@ class CaptionGenerator(object):
         cx=xp.zeros((self.rnn_model.n_layers, batch_size, self.rnn_model.hidden_dim), dtype=xp.float32)
         
         hy,cy = self.rnn_model.input_cnn_feature(hx,cx,image_feature)
+
+
         initial_state={\
                     "hidden":hy,\
                     "cell":cy,\
-                    "path":[self.token2index["<sos>"]],\
+                    "path":[self.token2index[self.first_word]],\
                     "cost":0,\
                 }\
 
