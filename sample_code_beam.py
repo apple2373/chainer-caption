@@ -31,15 +31,18 @@ parser.add_argument('--cnn-model', type=str, default='./data/ResNet50.model',hel
 parser.add_argument('--rnn-model', type=str, default='./data/caption_model.model',help='place of the caption model')
 parser.add_argument('--beam',default=3, type=int,help='beam size in beam search')
 parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
+parser.add_argument('--lang',default="<sos>", type=str,help='special word to indicate the langauge or just <sos>')
 args = parser.parse_args()
 
 caption_generator=CaptionGenerator(
-    rnn_model_place=args.rnn_model,\
+    rnn_model_place=args.rnn_model,
     cnn_model_place=args.cnn_model,
-    dictonary_place=args.vocab,\
-    beamsize=args.beam,\
-    depth_limit=args.depth,\
-    gpu_id=args.gpu,)
+    dictonary_place=args.vocab,
+    beamsize=args.beam,
+    depth_limit=args.depth,
+    gpu_id=args.gpu,
+    first_word= args.lang,
+    )
 
 captions = caption_generator.generate(args.img)
 for caption in captions:

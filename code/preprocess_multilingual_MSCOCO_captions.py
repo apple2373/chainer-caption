@@ -7,11 +7,14 @@ import json
 import nltk
 from collections import Counter,OrderedDict
 from itertools import chain
+from copy import deepcopy
+
 import tinysegmenter
 segmenter = tinysegmenter.TinySegmenter()
 
 import random
 random.seed(0)
+
 
 
 '''
@@ -20,11 +23,14 @@ e.g.
 python preprocess_multilingual_MSCOCO_captions.py \
 --en ../data/MSCOCO/captions_train2014.json \
 --jp ../data/MSCOCO/yjcaptions26k_clean.json \
---out_train ../data/MSCOCO/mscoco_caption_en_jp_train.json \
---out_val ../data/MSCOCO/mscoco_caption_en_jp_val.json \
---out_test ../data/MSCOCO/mscoco_caption_en_jp_test.json \
---outdic ../data/MSCOCO/mscoco_caption_en_jp_train_dic.json \
+--outdir ../data/MSCOCO/ \
+--prefix mscoco_caption_multi \
 
+python preprocess_multilingual_MSCOCO_captions.py \
+--en ../data/MSCOCO/captions_train2014.json \
+--jp ../data/MSCOCO/yjcaptions26k_clean.json \
+--outdir ../data/MSCOCO/ \
+--prefix mscoco_caption_multi2 \
 '''
 
 def segment(caption,lang):
@@ -62,18 +68,64 @@ def read_MSCOCO_json(file_place,args,lang):
         captions[caption_id]={}
         captions[caption_id]['image_id']=image_id
         captions[caption_id]['tokens']=caption_tokens
+        captions[caption_id]['caption']=caption
         
     return captions
+
+
+def create_new_caption_dataset(args,new_captions,new_cap_id=1):
+    captions={}
+    for caption in new_captions:
+        captions[new_cap_id]=caption
+        new_cap_id+=1
+
+    #count word frequencies
+    texts=[captions[caption_id]['tokens'] for caption_id in captions]
+    tokens=list(chain.from_iterable(texts))
+    freq_count=Counter(tokens)
+
+    print "total distinct words:",len(freq_count)
+
+    #remove words that appears less than 5
+    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
+    id2word.append("<ukn>")
+    word2id = {id2word[i]:i for i in xrange(len(id2word))}
+
+    print "total distinct words after cutoff:",len(id2word)
+
+    for caption_id in captions:
+        caption_tokens=captions[caption_id]['tokens']
+        #map each token into id
+        sentence=[]
+        for token in caption_tokens:
+            if token not in word2id:
+                token="<ukn>"
+            sentence.append(word2id[token])
+        del captions[caption_id]['tokens']
+        captions[caption_id]['token_ids']=sentence
+
+    return captions,word2id,new_cap_id
+
+def save_raw_json(captions,outfile):
+    captions={"annotations":captions}
+    with open(outfile, 'w') as f:
+        json.dump(captions, f, sort_keys=True, indent=4)    
+
+def save_training_json_and_dic(captions,word2id,outfile,outdic):
+    #save to json files
+    with open(outfile, 'w') as f:
+        json.dump(captions, f, sort_keys=True, indent=4)
+
+    with open(outdic, 'w') as f:
+        json.dump(word2id, f, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
     #parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--en', type=str,help='json file of MSCOCO formatted captions for English')
     parser.add_argument('--jp', type=str,help='json file of MSCOCO formatted captions for Japanese')
-    parser.add_argument('--out_train', type=str, help='the place of output training file')
-    parser.add_argument('--out_val', type=str, help='the place of output validitation file')
-    parser.add_argument('--out_test', default = False,type=bool,help='the place of output test file')
-    parser.add_argument('--outdic', type=str,help='the place of output dictonary file')
+    parser.add_argument('--outdir', type=str, help='the directory of output files')
+    parser.add_argument('--prefix', type=str, help='prefix of output files')
     parser.add_argument('--cut', default = 5,type=int,help='cut off frequency')
     args = parser.parse_args()
 
@@ -120,72 +172,30 @@ if __name__ == '__main__':
         elif caption["image_id"] in train_set:
             jp_selected_captions_train.append(caption)
 
-    # for caption_id, caption in en_captions.iteritems():
-    #     if caption["image_id"] in common_img_ids[0:2000]:
-    #         en_selected_captions_val.append(caption)
-    #     elif caption["image_id"] in common_img_ids[2000:4000]:
-    #         en_selected_captions_test.append(caption)
-    #     elif caption["image_id"] in common_img_ids[4000:-1]:
-    #         en_selected_captions_train.append(caption)
-
-    # for caption_id, caption in jp_captions.iteritems():
-    #     if caption["image_id"] in common_img_ids[0:2000]:
-    #         jp_selected_captions_val.append(caption)
-    #     elif caption["image_id"] in common_img_ids[2000:4000]:
-    #         jp_selected_captions_test.append(caption)
-    #     elif caption["image_id"] in common_img_ids[4000:-1]:
-    #         jp_selected_captions_train.append(caption)
-
     print "new caption created"
 
-    new_cap_id=1
-    captions={}
-    for caption in en_selected_captions_train+jp_selected_captions_train:
-        captions[new_cap_id]=caption
-        new_cap_id+=1
+    save_raw_json(en_selected_captions_train,args.outdir+args.prefix+"_en_captions_train.json")
+    save_raw_json(en_selected_captions_val,args.outdir+args.prefix+"_en_captions_val.json")
+    save_raw_json(en_selected_captions_test,args.outdir+args.prefix+"_en_captions_test.json")
+    save_raw_json(jp_selected_captions_train,args.outdir+args.prefix+"_jp_captions_train.json")
+    save_raw_json(jp_selected_captions_val,args.outdir+args.prefix+"_jp_captions_val.json")
+    save_raw_json(jp_selected_captions_test,args.outdir+args.prefix+"_jp_captions_test.json")
 
-    #count word frequencies
-    texts=[captions[caption_id]['tokens'] for caption_id in captions]
-    tokens=list(chain.from_iterable(texts))
-    freq_count=Counter(tokens)
+    new_captions=en_selected_captions_train+jp_selected_captions_train
+    captions,word2id,new_cap_id = create_new_caption_dataset(args,deepcopy(new_captions),new_cap_id=1)
+    outfile=args.outdir+args.prefix+"_en_jp_train_preprocessed.json"
+    outdic=args.outdir+args.prefix+"_en_jp_train_dic.json"
+    save_training_json_and_dic(captions,word2id,outfile,outdic)
 
-    # freq_count_ordered={}
-    # for word,freq in freq_count.most_common(len(freq_count)):
-    #     freq_count_ordered[word]=freq
-    #頻度順にjsonを出したいけど、諦めたw　valueでorderするのはできない？
+    new_captions=en_selected_captions_train
+    captions,word2id,new_cap_id = create_new_caption_dataset(args,deepcopy(new_captions),new_cap_id)
+    outfile=args.outdir+args.prefix+"_en_train_preprocessed.json"
+    outdic=args.outdir+args.prefix+"_en_train_dic.json"
+    save_training_json_and_dic(captions,word2id,outfile,outdic)
 
-    print "total distinct words:",len(freq_count)
+    new_captions=jp_selected_captions_train
+    captions,word2id,new_cap_id = create_new_caption_dataset(args,deepcopy(new_captions),new_cap_id)
+    outfile=args.outdir+args.prefix+"_jp_train_preprocessed.json"
+    outdic=args.outdir+args.prefix+"_jp_train_dic.json"
+    save_training_json_and_dic(captions,word2id,outfile,outdic)
 
-    #remove words that appears less than 5
-    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
-    id2word.append("<ukn>")
-    word2id = {id2word[i]:i for i in xrange(len(id2word))}
-
-    print "total distinct words after cutoff:",len(id2word)
-
-    for caption_id in captions:
-        caption_tokens=captions[caption_id]['tokens']
-        #map each token into id
-        sentence=[]
-        for token in caption_tokens:
-            if token not in word2id:
-                token="<ukn>"
-            sentence.append(word2id[token])
-        del captions[caption_id]['tokens']
-        captions[caption_id]['token_ids']=sentence
-
-    #save to json files
-    with open(args.out_train, 'w') as f:
-        json.dump(captions, f, sort_keys=True, indent=4)
-
-    with open(args.outdic, 'w') as f:
-        json.dump(word2id, f, sort_keys=True, indent=4)
-
-    # with open(args.out_train, 'w') as f:
-    #     json.dump(captions, f, sort_keys=True, indent=4)
-
-    # with open(args.out_train, 'w') as f:
-    #     json.dump(captions, f, sort_keys=True, indent=4)
-    # if args.outfreq != None:
-    #     with open(args.outfreq, 'w') as f:
-    #         json.dump(freq_count, f, sort_keys=True, indent=4)
