@@ -22,8 +22,6 @@ class CaptionDataLoader(object):
             else:
                 self.image_features=np.array([np.load("%s%012d.npz"%(self.image_feature_path,self.captions[caption_id]["image_id"]))['arr_0'] for caption_id in self.caption_ids])
 
-
-
     def get_batch(self,batch_size):
         batch_data_indicies=self.random_indicies[self.index_count:self.index_count+batch_size]
         self.index_count+=batch_size

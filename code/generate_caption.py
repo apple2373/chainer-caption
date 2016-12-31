@@ -31,18 +31,15 @@ parser.add_argument('--rnn-model', type=str, default='../data/caption_model_en.m
 parser.add_argument('--beam',default=3, type=int,help='beam size in beam search')
 parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
 parser.add_argument('--output',default="../data/MSCOCO/val2014_predected_captions.json", type=str,help='output file name')
-parser.add_argument('--lang',default="<sos>", type=str,help='special word to indicate the langauge or just <sos>')
 args = parser.parse_args()
 
 caption_generator=CaptionGenerator(
-    rnn_model_place=args.rnn_model,
-    cnn_model_place=args.cnn_model,
-    dictonary_place=args.vocab,
-    beamsize=args.beam,
-    depth_limit=args.depth,
-    gpu_id=args.gpu,
-    first_word= args.lang,
-    )
+    rnn_model_place=args.rnn_model,\
+    cnn_model_place=args.cnn_model,\
+    dictonary_place=args.vocab,\
+    beamsize=args.beam,\
+    depth_limit=args.depth,\
+    gpu_id=args.gpu,)
 
 output_annotations={}
 for i,fname in enumerate(os.listdir(args.dir)):

@@ -32,6 +32,8 @@ parser.add_argument('--filename_img_id',default=False,type=bool,help='image id i
 parser.add_argument('--preload',default=False,type=bool,help='preload all image features onto RAM')
 parser.add_argument("--epoch",default=10, type=int, help=u"the number of epochs")
 parser.add_argument("--batch",default=128, type=int, help=u"mini batchsize")
+parser.add_argument("--hidden",default=512, type=int, help=u"number of hidden units in LSTM")
+
 args = parser.parse_args()
 
 #save dir
@@ -61,7 +63,7 @@ dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,\
 
 #Model Preparation
 print "preparing caption generation models and training process"
-model=Image2CaptionDecoder(vocaburary_size=len(index2token))
+model=Image2CaptionDecoder(vocaburary_size=len(index2token),hidden_dim=args.hidden)
 
 #To GPU
 if args.gpu >= 0:

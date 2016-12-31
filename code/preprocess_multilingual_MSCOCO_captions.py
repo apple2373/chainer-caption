@@ -69,6 +69,7 @@ def read_MSCOCO_json(file_place,args,lang):
         captions[caption_id]['image_id']=image_id
         captions[caption_id]['tokens']=caption_tokens
         captions[caption_id]['caption']=caption
+        captions[caption_id]['id']=caption_id
         
     return captions
 
@@ -106,8 +107,10 @@ def create_new_caption_dataset(args,new_captions,new_cap_id=1):
 
     return captions,word2id,new_cap_id
 
-def save_raw_json(captions,outfile):
-    captions={"annotations":captions}
+def save_raw_json(captions,outfile,args):
+    with open(args.en, 'r') as f:
+        jsonData=json.load(f)
+    captions={"annotations":captions,"images":jsonData['images'],"type":"captions","info":"dummy, not all image ids show up in captions","licenses":"dummy"}
     with open(outfile, 'w') as f:
         json.dump(captions, f, sort_keys=True, indent=4)    
 
@@ -174,12 +177,12 @@ if __name__ == '__main__':
 
     print "new caption created"
 
-    save_raw_json(en_selected_captions_train,args.outdir+args.prefix+"_en_captions_train.json")
-    save_raw_json(en_selected_captions_val,args.outdir+args.prefix+"_en_captions_val.json")
-    save_raw_json(en_selected_captions_test,args.outdir+args.prefix+"_en_captions_test.json")
-    save_raw_json(jp_selected_captions_train,args.outdir+args.prefix+"_jp_captions_train.json")
-    save_raw_json(jp_selected_captions_val,args.outdir+args.prefix+"_jp_captions_val.json")
-    save_raw_json(jp_selected_captions_test,args.outdir+args.prefix+"_jp_captions_test.json")
+    save_raw_json(en_selected_captions_train,args.outdir+args.prefix+"_en_captions_train.json",args)
+    save_raw_json(en_selected_captions_val,args.outdir+args.prefix+"_en_captions_val.json",args)
+    save_raw_json(en_selected_captions_test,args.outdir+args.prefix+"_en_captions_test.json",args)
+    save_raw_json(jp_selected_captions_train,args.outdir+args.prefix+"_jp_captions_train.json",args)
+    save_raw_json(jp_selected_captions_val,args.outdir+args.prefix+"_jp_captions_val.json",args)
+    save_raw_json(jp_selected_captions_test,args.outdir+args.prefix+"_jp_captions_test.json",args)
 
     new_captions=en_selected_captions_train+jp_selected_captions_train
     captions,word2id,new_cap_id = create_new_caption_dataset(args,deepcopy(new_captions),new_cap_id=1)

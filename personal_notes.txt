@@ -18,34 +18,6 @@ python train_caption_model.py --savedir ./experiment1jp_yj --epoch 40 --batch 12
 --captions ./data/MSCOCO/yjcaptions26k_clean_processed.json \
 --preload True
 
-#train multilingual en
-python train_caption_model.py --savedir ./experiment1multi_en --epoch 40 --batch 120 --gpu 0 \
---vocab ./data/MSCOCO/mscoco_caption_multi_en_train_dic.json \
---captions ./data/MSCOCO/mscoco_caption_multi_en_train_preprocessed.json \
---preload True
-
-#train multilingual jp
-python train_caption_model.py --savedir ./experiment1multi_jp --epoch 40 --batch 120 --gpu 0 \
---vocab ./data/MSCOCO/mscoco_caption_multi_jp_train_dic.json \
---captions ./data/MSCOCO/mscoco_caption_multi_jp_train_preprocessed.json \
---preload True
-
-#train multilingual muti
-python train_caption_model.py --savedir ./experiment1multi --epoch 40 --batch 120 --gpu 0 \
---vocab ./data/MSCOCO/mscoco_caption_multi_en_jp_train_dic.json \
---captions ./data/MSCOCO/mscoco_caption_multi_en_jp_train_preprocessed.json \
---preload True
-
-
-#generate multilingual
-python sample_code_beam.py \
---rnn-model ./experiment1multi/caption_model40.model \
---cnn-model ./data/ResNet50.model \
---vocab ./data/MSCOCO/mscoco_caption_en_jp_train_dic.json \
---gpu -1 \
---img ./sample_imgs/COCO_val2014_000000185546.jpg \
---lang "<jp>"
-
 #preprocess captions
 python preprocess_MSCOCO_captions.py \
 --input ../data/MSCOCO/captions_train2014.json \
@@ -90,8 +62,6 @@ python sample_code_beam.py \
 --gpu -1 \
 --img ./sample_imgs/COCO_val2014_000000185546.jpg \
 
-
-
 python sample_code_beam.py  --rnn-model ./experiment1/caption_model10.model --img ./sample_imgs/COCO_val2014_000000185546.jpg
 python sample_code_beam.py  --rnn-model ./experiment1jp/caption_model10.model --vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json --img ./sample_imgs/COCO_val2014_000000241747.jpg
 python sample_code_beam.py  --rnn-model ./experiment1cn/caption_model10.model --vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json --img ./sample_imgs/COCO_val2014_000000185546.jpg
@@ -106,12 +76,119 @@ cd sample_imgs/
  curl -X POST -F image=@dog.jpg http://localhost:8090/predict
  
  #evalluate
-python generate_caption.py  --rnn-model ../experiment1/caption_model1.model -g 0 --beam 1 --output ../experiment1/caption_model_val_predicted.json
-python generate_caption.py  --rnn-model ../data/caption_model1.model -g 0 --beam 3 --output ../en.json
+python generate_caption.py  --rnn-model ../experiment1/caption_model40.model -g 0 --beam 1 --output ../experiment1/caption_model40_val_predicted_beam1.json
+python evaluate_captions.py \
+--true ../data/MSCOCO/captions_val2014-2.json \
+--predicted  ../experiment1/caption_model40_val_predicted_beam1.json \
+--output ../experiment1/caption_model40_val_predicted_beam1_scores.json 
+
+python generate_caption.py  --rnn-model ../experiment1/caption_model40.model -g 0 --beam 5 --output ../experiment1/caption_model40_val_predicted_beam5.json
+python evaluate_captions.py \
+--true ../data/MSCOCO/captions_val2014-2.json \
+--predicted  ../experiment1/caption_model40_val_predicted_beam5.json \
+--output ../experiment1/caption_model40_val_predicted_beam5_scores.json 
+
+#captions_val2014-2.json 何故かコレじゃないと動かない
+
+#######################
+#### multilingual model ####
+#######################
  
- python generate_caption.py  -g 0 --beam 1 \
- --rnn-model ../experiment1multi/caption_model40.model \
- --dir ../data/MSCOCO/val2014_ResNet50_features/ \ 
- --file ../data/MSCOCO/val2014_ResNet50_features/ \
- --output ../experiment1multi/caption_model40_val_predicted.json \
- --lang "<en>"
+ #prepare dataset
+ see   preprocess_multilingual_MSCOCO_captions.py
+ 
+ #train multilingual en
+python train_caption_model.py --savedir ./experiment1multi_en --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/mscoco_caption_multi_en_train_dic.json \
+--captions ./data/MSCOCO/mscoco_caption_multi_en_train_preprocessed.json \
+--preload True
+
+#train multilingual jp
+python train_caption_model.py --savedir ./experiment1multi_jp --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/mscoco_caption_multi_jp_train_dic.json \
+--captions ./data/MSCOCO/mscoco_caption_multi_jp_train_preprocessed.json \
+--preload True
+
+#train multilingual muti
+python train_caption_model.py --savedir ./experiment2multi --epoch 80 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/mscoco_caption_multi_en_jp_train_dic.json \
+--captions ./data/MSCOCO/mscoco_caption_multi_en_jp_train_preprocessed.json \
+--preload True
+
+#generate multilingual
+python sample_code_beam.py \
+--rnn-model ./experiment1multi/caption_model40.model \
+--cnn-model ./data/ResNet50.model \
+--vocab ./data/MSCOCO/mscoco_caption_en_jp_train_dic.json \
+--gpu -1 \
+--img ./sample_imgs/COCO_val2014_000000185546.jpg \
+--lang "<jp>"
+ 
+ #generate english captions from milti model
+ python generate_caption_eval.py  -g 0 --beam 1 \
+--rnn-model ../experiment1multi/caption_model40.model \
+--vocab ../data/MSCOCO/mscoco_caption_multi_en_jp_train_dic.json \
+--eval_file ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--image_feature_path  ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_ \
+--output ../experiment1multi/caption_model40_val_predicted.json \
+--lang "<en>"
+ python generate_caption_eval.py  -g 0 --beam 5 \
+--rnn-model ../experiment1multi/caption_model40.model \
+--vocab ../data/MSCOCO/mscoco_caption_multi_en_jp_train_dic.json \
+--eval_file ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--image_feature_path  ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_ \
+--output ../experiment1multi/caption_model40_val_predicted_beam5.json \
+--lang "<en>"
+
+ #generate english captions from milti model 2
+ python generate_caption_eval.py  -g 0 --beam 5 \
+--rnn-model ../experiment2multi/caption_model57.model \
+--vocab ../data/MSCOCO/mscoco_caption_multi_en_jp_train_dic.json \
+--eval_file ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--image_feature_path  ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_ \
+--output ../experiment2multi/caption_model57_val_predicted_beam4.json \
+--lang "<en>"
+python evaluate_captions.py \
+--true ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--predicted  ../experiment2multi/caption_model57_val_predicted_beam4.json \
+--output ../experiment2multi/caption_model57_val_predicted_beam4_scores.json 
+ 
+  #generate english captions from only english model
+ python generate_caption_eval.py  -g 0 --beam 1 \
+--rnn-model ../experiment1multi_en/caption_model40.model \
+--vocab ../data/MSCOCO/mscoco_caption_multi_en_train_dic.json \
+--eval_file ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--image_feature_path  ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_ \
+--output ../experiment1multi_en/caption_model40_val_predicted.json \
+--lang "<en>"
+ python generate_caption_eval.py  -g 0 --beam 5 \
+--rnn-model ../experiment1multi_en/caption_model40.model \
+--vocab ../data/MSCOCO/mscoco_caption_multi_en_train_dic.json \
+--eval_file ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--image_feature_path  ../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_ \
+--output ../experiment1multi_en/caption_model40_val_predicted_beam5.json \
+--lang "<en>"
+
+not yet tried
+#generate japanese captions from milti model
+#generate japanese captions from only english model
+
+python evaluate_captions.py \
+--true ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--predicted  ../experiment1multi_en/caption_model40_val_predicted.json \
+--output ../experiment1multi_en/caption_model40_val_predicted_scores.json 
+
+python evaluate_captions.py \
+--true ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--predicted  ../experiment1multi/caption_model40_val_predicted.json \
+--output ../experiment1multi/caption_model40_val_predicted_scores.json 
+
+python evaluate_captions.py \
+--true ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--predicted  ../experiment1multi_en/caption_model40_val_predicted_beam5.json \
+--output ../experiment1multi_en/caption_model40_val_predicted_beam5_scores.json 
+
+python evaluate_captions.py \
+--true ../data/MSCOCO/mscoco_caption_multi2_en_captions_val.json \
+--predicted  ../experiment1multi/caption_model40_val_predicted_beam5.json \
+--output ../experiment1multi/caption_model40_val_predicted_scores.json 
