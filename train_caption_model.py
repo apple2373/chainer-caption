@@ -58,8 +58,7 @@ with open(args.vocab, 'r') as f:
 with open(args.captions, 'r') as f:
     captions = json.load(f)
 
-dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,\
-    preload_all_features=args.preload, filename_img_id=args.filename_img_id)
+dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=args.preload, filename_img_id=args.filename_img_id)
 
 #Model Preparation
 print "preparing caption generation models and training process"

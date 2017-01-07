@@ -35,7 +35,7 @@ except ImportError:
 import heapq
 
 class CaptionGenerator(object):
-    def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1,first_word="<sos>"):
+    def __init__(self,rnn_model_place,cnn_model_place,dictonary_place,beamsize=3,depth_limit=50,gpu_id=-1,first_word="<sos>",hidden_dim=512):
         self.gpu_id=gpu_id
         self.beamsize=beamsize
         self.depth_limit=depth_limit
@@ -49,7 +49,7 @@ class CaptionGenerator(object):
         serializers.load_hdf5(cnn_model_place, self.cnn_model)
         self.cnn_model.train = False
 
-        self.rnn_model=Image2CaptionDecoder(len(self.token2index))
+        self.rnn_model=Image2CaptionDecoder(len(self.token2index),hidden_dim=hidden_dim)
         serializers.load_hdf5(rnn_model_place, self.rnn_model)
         self.rnn_model.train = False
 

@@ -159,6 +159,10 @@ if __name__ == '__main__':
     val_set=set(common_img_ids[0:2000])
     test_set=set(common_img_ids[2000:4000])
     train_set=set(common_img_ids[4000:-1])
+
+    print len(train_set)
+    sys.exit()
+
     for caption_id, caption in en_captions.iteritems():
         if caption["image_id"] in val_set:
             en_selected_captions_val.append(caption)
