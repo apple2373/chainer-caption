@@ -116,6 +116,6 @@ while (dataset.epoch <= args.epoch):
 
         mean_loss = sum_loss / num_train_data
         with open(args.savedir+"/mean_loss.txt", "a") as f:
-            f.write(str(loss.data)+'\n')
+            f.write(str(mean_loss)+'\n')
         sum_loss = 0
         iterraton=0
