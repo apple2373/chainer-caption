@@ -40,10 +40,7 @@ class CaptionGenerator(object):
         self.beamsize=beamsize
         self.depth_limit=depth_limit
         self.image_loader=Image_loader(mean="imagenet")
-
-        with open(dictonary_place, 'r') as f:
-            self.token2index = json.load(f)
-        self.index2token={v:k for k,v in self.token2index.iteritems()}
+        self.index2token=self.parse_dic(dictonary_place)
 
         self.cnn_model=ResNet()
         serializers.load_hdf5(cnn_model_place, self.cnn_model)
@@ -64,6 +61,16 @@ class CaptionGenerator(object):
             self.rnn_model.to_gpu()
         else:
             xp=np
+
+    def parse_dic(self,dictonary_place):
+        with open(dictonary_place, 'r') as f:
+            json_file = json.load(f)
+        if isinstance(json_file['words'], list):
+            self.token2index = { word['word']:word['idx'] for word in json_file["words"]}
+        else:
+            self.token2index = json_file
+
+        return {v:k for k,v in self.token2index.iteritems()}
 
     def successor(self,current_state):
         '''

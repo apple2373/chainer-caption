@@ -3,7 +3,7 @@
 
 #class to get the data in a batch way
 #loading on memory option (preload_all_features) took  6m10.400s (user time = 2m41.546s) to load  if it is true
-#refactered version of CaptionDataLoader.[u]
+#refactered version of CaptionDataLoader.py
 
 import numpy as np
 import os
@@ -11,7 +11,7 @@ from image_loader import Image_loader
 from ResNet50 import ResNet
 
 class CaptionDataLoader(object):
-    def __init__(self, dataset,image_feature_root,image_root="",preload_all_features=False,image_mean="imagenet"):
+    def __init__(self,dataset,image_feature_root,image_root="",preload_all_features=False,image_mean="imagenet"):
         self.image_loader=Image_loader(mean=image_mean)
         self.captions=dataset["captions"]
         self.images=dataset["images"]

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # coding: UTF-8
+#script for a new preprocess way.
+#input file is [{ "file_path": "path/img.jpg", "captions": ["a caption", "a similar caption" ...] }, ...]
 
 import os
 import argparse
@@ -25,6 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--cut', default = 5,type=int,help='cut off frequency. this frequency will be the lowest to be kept.')
     parser.add_argument('--lower', default = True,type=bool,help='make everything into lower case')
     parser.add_argument('--remove-period', default = False,type=bool,help='remove the last period if a caption has a priod')
+    parser.add_argument('--val', default = 0,type=int,help='number of validiation images')
+    parser.add_argument('--test', default = 0,type=int,help='number of test images')
     # parser.add_argument('--keep-info', default = False,type=bool,help='keep other image information other than "file_path" in the input json')
     args = parser.parse_args()
 
@@ -49,10 +53,32 @@ if __name__ == '__main__':
                 caption=caption[0:-1]#to delete the last period. 
             return self.segmenter(caption) 
 
+    def word2idx_func(word,word2idx):
+        if word in word2idx:
+            return word2idx[word]
+        else:
+            return word2idx["<ukn>"]
+
     segmenter=Segmenter(args)
 
     with open(args.input, 'r') as f:
         jsonData = json.load(f)
+
+    #split into train,val,test data:
+    train_data=[]
+    val_data=[]
+    test_data=[]
+
+    random.seed(0)#in order to have the same split every time
+    random.shuffle(jsonData)
+
+    for i,img in enumerate(jsonData):
+        if i < arg.val:
+            val_data.append(img)
+        elif i < arg.test + arg.val: 
+            test_data.append(img)
+        else:
+            train_data.append(img)
 
     #the info for the output json
     image_idx=0
@@ -61,7 +87,7 @@ if __name__ == '__main__':
     all_captions=[]
     all_words=[]
 
-    for image in jsonData:
+    for image in train_data:
         for caption in image["captions"]:
             caption_tokens=['<sos>']
             caption_tokens += segmenter.segment(caption)
@@ -93,20 +119,17 @@ if __name__ == '__main__':
     print("total distinct words after the cutoff:",len(all_words))
 
     word2idx = {word["word"]:word["idx"] for word in all_words}
-    def word2idx_func(word):
-        if word in word2idx:
-            return word2idx[word]
-        else:
-            return word2idx["<ukn>"]
 
     for caption in all_captions:
-        caption["caption"] = [word2idx_func(word) for word in caption["caption"]]
+        caption["caption"] = [word2idx_func(word,word2idx) for word in caption["caption"]]
 
     #save to json files
     preprocessed_file={}
     preprocessed_file["images"]=all_images
     preprocessed_file["captions"]=all_captions
     preprocessed_file["words"]=all_words
+    preprocessed_file["val"]=val_data
+    preprocessed_file["test"]=test_data
     with open(args.output, 'w') as f:
         json.dump(preprocessed_file, f, sort_keys=True, indent=4)
     print("The output file is saved to",args.output)
