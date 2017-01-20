@@ -101,7 +101,7 @@ if args.gpu >= 0:
 
 #set up optimizers
 optimizer = optimizers.Adam()
-optimizer.setup(model)
+optimizer.setup(args.rnn_model)
 # optimizer_cnn = optimizers.Adam()
 # optimizer_cnn.setup(model.cnn)
 

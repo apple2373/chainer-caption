@@ -1,0 +1,9 @@
+#Jp-En
+
+#First dataset preparation
+python3 create_MSCOCO_en_jp_dataset.py \
+--en ../data/MSCOCO/captions_train2014.json \
+--out-en ../data/MSCOCO/mscoco_jp.json \
+--jp ../data/MSCOCO/yjcaptions26k_clean.json \
+--out-jp ../data/MSCOCO/mscoco_en_intersect_jp.json 
+

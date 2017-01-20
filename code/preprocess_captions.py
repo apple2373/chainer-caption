@@ -16,10 +16,6 @@ e.g.
 python preprocess_captions.py \
 --input ../data/MSCOCO/ms_coco_raw.json \
 --output ../data/MSCOCO/mscoco_train2014_all_preprocessed.json \
-
-python preprocess_captions.py \
---input ../data/MSCOCO/ms_coco_jp.json \
---output ../data/MSCOCO/mscoco_train2014_all_preprocessed.json \
 '''
 
 if __name__ == '__main__':
