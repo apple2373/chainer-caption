@@ -10,9 +10,13 @@ This can be used for any langauge assumning that the inputs are already segmente
 import sys
 sys.path.append('../coco-caption/')
 sys.path.append('../coco-caption/pycocoevalcap/')
+sys.path.append('./coco-caption/')
+sys.path.append('./coco-caption/pycocoevalcap/')
 from bleu.bleu import Bleu
 from rouge.rouge import Rouge
 from cider.cider import Cider
+import string
+import re
 
 class CaptionEvaluater(object):
     def __init__(self,):
@@ -20,6 +24,15 @@ class CaptionEvaluater(object):
         self.rouge_scorer=Rouge()
         self.cider_scorer=Cider()
         self.truth=None
+        remove = string.punctuation+"、。，．"
+        self.remove_pattern = r"[{}]".format(remove) # create the pattern
+
+    def remove_punctuation(self,line):
+        return re.sub(self.remove_pattern, "", line) 
+
+    def trnasform_utf8(self,line):
+        # return u' '.join(line).encode('utf-8').strip()
+        return line
 
     def set_ground_truth(self,ground_truth):
         '''
@@ -27,6 +40,9 @@ class CaptionEvaluater(object):
             {"image_identifier": ["a caption", "a similar caption", ...], ...}
         "image_identifier" can be either string or number.
         '''
+        for img in ground_truth:
+            # ground_truth[img]=map(self.trnasform_utf8,ground_truth[img])
+            ground_truth[img]=map(self.remove_punctuation,ground_truth[img])
         self.truth=ground_truth
 
     def evaluate(self,predicetd_captions):
@@ -36,6 +52,10 @@ class CaptionEvaluater(object):
         "image_identifier" need to be same as used in ground truth.
         make sure the number of caption is only one, even though it uses python list. 
         '''
+        for img in predicetd_captions:
+            # predicetd_captions[img]=map(self.trnasform_utf8,predicetd_captions[img])
+            predicetd_captions[img]=map(self.remove_punctuation,predicetd_captions[img])
+
         results={}
         for i,score in enumerate(self.get_bleu(predicetd_captions)[0]):
             results["bleu-%d"%i]=score
@@ -89,11 +109,11 @@ if __name__ == '__main__':
 
     #prediceted は一つだけじゃないとダメ
     predicted={}
-    predicted['262148']=['人 が オレンジ色 の シャツ を 着て 立って います']
-    predicted[262148]=['a man riding a skateboard down a ramp']
-    predicted[393225]=['a bowl of soup with carrots and a spoon']
-    predicted[1]=['a man riding a skateboard down a ramp']
-    predicted[2]=['a bowl of soup with carrots and a spoon']
+    predicted['262148']=['人 が オレンジ色 の シャツ を 着て 立って います。']
+    predicted[262148]=['a man riding a skateboard down a ramp。']
+    predicted[393225]=['a bowl of soup with carrots and a spoon.']
+    predicted[1]=['a man riding a skateboard down a ramp。']
+    predicted[2]=['a bowl of soup with carrots and a spoon、']
     #keyは数字でも文字列でもどっちでもいいけど、ground truth と predicedで対応が取れるように！
 
     evaluater=CaptionEvaluater()

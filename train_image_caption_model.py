@@ -10,7 +10,7 @@ import json
 
 import sys
 import os
-#os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
+os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
 import chainer 
 
 import chainer.functions as F
@@ -20,8 +20,11 @@ from chainer import Function, FunctionSet, Variable, optimizers, serializers
 sys.path.append('./code')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from CaptionDataLoader2 import CaptionDataLoader
+from CaptionEvaluater import CaptionEvaluater
+from CaptionGenerator import CaptionGenerator
 from ResNet50 import ResNet
 
+# from copy import deepcopy
 
 #Parse arguments
 parser = argparse.ArgumentParser()
@@ -31,13 +34,14 @@ parser.add_argument('--captions',default='./data/MSCOCO/mscoco_train2014_all_pre
 parser.add_argument('--image_root',default='./data/MSCOCO/MSCOCO_raw_images/', type=str,help='path to image directory')
 parser.add_argument('--image_feature_root',default='./data/MSCOCO/MSCOCO_ResNet50_features/', type=str,help='path to CNN features directory')
 parser.add_argument('--preload',default=False,type=bool,help='preload all image features onto RAM')
-parser.add_argument("--epoch",default=100, type=int, help=u"the number of epochs")
+parser.add_argument("--epoch",default=60, type=int, help=u"the number of epochs")
 parser.add_argument("--batch",default=128, type=int, help=u"mini batchsize")
 parser.add_argument("--batch-cnn",default=16, type=int, help=u"mini batchsize when tuning cnn")
 parser.add_argument("--hidden",default=512, type=int, help=u"number of hidden units in LSTM")
 parser.add_argument("--cnn-tune-after",default=40, type=int, help=u"epoch starting to tune CNN. -1 means never")
 parser.add_argument('--cnn-model', type=str, default='./data/ResNet50.model',help='place of the ResNet model')
 parser.add_argument('--rnn-model', type=str, default='',help='place of the RNN model')
+parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
 args = parser.parse_args()
 
 #save dir
@@ -53,13 +57,31 @@ if args.gpu >= 0:
 else:
     xp=np
 
+#make evaluater
+evaluater=CaptionEvaluater()
+
 #Prepare Data
 print("loading preprocessed training data")
 
 with open(args.captions, 'r') as f:
     captions = json.load(f)
+
+val_truth={cap["file_path"]:cap["captions"] for cap in captions["val"]}
+test_truth={cap["file_path"]:cap["captions"] for cap in captions["test"]}
+evaluater.set_ground_truth(val_truth)
+del captions["val"]
+del captions["test"]
 dataset=CaptionDataLoader(captions,image_feature_root=args.image_feature_root,image_root=args.image_root)
 
+caption_generator=CaptionGenerator(
+    rnn_model_place=args.rnn_model,
+    cnn_model_place=args.cnn_model,
+    dictonary_place=args.captions,
+    beamsize=1,
+    depth_limit=args.depth,
+    gpu_id=args.gpu,
+    first_word= "<sos>",
+    )
 
 #Model Preparation
 print "preparing caption generation models and training process"
@@ -79,9 +101,9 @@ if args.gpu >= 0:
 
 #set up optimizers
 optimizer = optimizers.Adam()
-optimizer.setup(model.rnn)
-optimizer_cnn = optimizers.Adam()
-optimizer_cnn.setup(model.cnn)
+optimizer.setup(model)
+# optimizer_cnn = optimizers.Adam()
+# optimizer_cnn.setup(model.cnn)
 
 #Trining Setting
 batch_size=args.batch
@@ -94,6 +116,8 @@ print 'training started'
 sum_loss = 0
 print dataset.epoch
 iteration = 1
+evaluation_log={}
+evaluation_log["val"]=[]
 while (dataset.epoch <= args.epoch):
     optimizer.zero_grads()
     current_epoch=dataset.epoch
@@ -101,7 +125,7 @@ while (dataset.epoch <= args.epoch):
 
     if train_cnn: 
         batch_size=args.batch_cnn
-        optimizer_cnn.zero_grads()
+        #optimizer_cnn.zero_grads()
         images,x_batch=dataset.get_batch(batch_size,raw_image=True)
         if args.gpu >= 0:
             images = cuda.to_gpu(images, device=args.gpu)
@@ -112,7 +136,6 @@ while (dataset.epoch <= args.epoch):
         if args.gpu >= 0:
             image_feature = cuda.to_gpu(image_feature, device=args.gpu)
             x_batch = [cuda.to_gpu(x, device=args.gpu) for x in x_batch]
-
 
     #forward start
     hx=xp.zeros((model.rnn.n_layers, len(x_batch), model.rnn.hidden_dim), dtype=xp.float32)
@@ -128,14 +151,16 @@ while (dataset.epoch <= args.epoch):
     loss.unchain_backward()
     optimizer.clip_grads(grad_clip)
     optimizer.update()
-    if train_cnn: 
-        optimizer_cnn.update()
+    if train_cnn:
+        pass 
+        # optimizer_cnn.clip_grads(grad_clip)
+        # optimizer_cnn.update()
     
     sum_loss += loss.data * batch_size
     iteration+=1
     
-    if dataset.epoch - current_epoch > 0 or iteration > 10000:
-        print "epoch:",dataset.epoch
+    if dataset.epoch - current_epoch > 0:
+        print "epoch:",current_epoch
         if train_cnn: 
             serializers.save_hdf5(args.savedir+"/caption_model_resnet%d.model"%current_epoch, model.cnn)
         serializers.save_hdf5(args.savedir+"/caption_model%d.model"%current_epoch, model.rnn)
@@ -146,3 +171,58 @@ while (dataset.epoch <= args.epoch):
             f.write(str(mean_loss)+'\n')
         sum_loss = 0
         iteration=0
+
+        #evaluation
+        print("evaluating for epoch %d"%current_epoch)
+        caption_generator.cnn_model=model.cnn
+        caption_generator.cnn_model.train=False
+        caption_generator.rnn_model=model.rnn
+        caption_generator.rnn_model.train=False
+
+        val_predicted={}
+        i=1
+        for file_path in val_truth:
+            i+=1
+            sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
+            print(i,sentence)
+            val_predicted[file_path]=[sentence]
+
+        print("computing evaluation scores")
+        scores=evaluater.evaluate(val_predicted)
+        print(scores)
+
+        evaluation_log["val"].append(scores)
+        with open(args.savedir+"/evaluation_log.json", "w") as f:
+            json.dump(evaluation_log, f, sort_keys=True, indent=4)
+
+        model.rnn.train=True
+        model.cnn.train=True
+
+
+#finalize the evaliation
+best_epoch=np.argmax([score["cider"] for score in evaluation_log["val"]])+1#because epoch start from 1
+print("best epoch is %d"%best_epoch)
+if train_cnn: 
+    serializers.load_hdf5(args.savedir+"/caption_model_resnet%d.model"%best_epoch, caption_generator.cnn_model)
+serializers.load_hdf5(args.savedir+"/caption_model%d.model"%best_epoch, caption_generator.rnn_model)
+
+caption_generator.cnn_model.train=False
+caption_generator.rnn_model.train=False
+
+test_predicted={}
+i=1
+for file_path in test_truth:
+    i+=1
+    sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
+    print(i,sentence)
+    test_predicted[file_path]=[sentence]
+
+print("computing final evaluation scores")
+evaluater.set_ground_truth(test_truth)
+scores=evaluater.evaluate(test_predicted)
+print(scores)
+
+evaluation_log["test"]=scores
+evaluation_log["best_epoch"]=best_epoch
+with open(args.savedir+"/evaluation_log.json", "w") as f:
+    json.dump(evaluation_log, f, sort_keys=True, indent=4)

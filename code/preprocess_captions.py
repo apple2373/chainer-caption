@@ -8,12 +8,17 @@ import argparse
 import json
 from collections import Counter,OrderedDict
 from itertools import chain
+import random
 
 
 '''
 e.g. 
 python preprocess_captions.py \
 --input ../data/MSCOCO/ms_coco_raw.json \
+--output ../data/MSCOCO/mscoco_train2014_all_preprocessed.json \
+
+python preprocess_captions.py \
+--input ../data/MSCOCO/ms_coco_jp.json \
 --output ../data/MSCOCO/mscoco_train2014_all_preprocessed.json \
 '''
 
@@ -26,9 +31,9 @@ if __name__ == '__main__':
     parser.add_argument('--jp', default = False,type=bool,help='use Japanese segmenter. Install by "pip install tinysegmenter"')
     parser.add_argument('--cut', default = 5,type=int,help='cut off frequency. this frequency will be the lowest to be kept.')
     parser.add_argument('--lower', default = True,type=bool,help='make everything into lower case')
-    parser.add_argument('--remove-period', default = False,type=bool,help='remove the last period if a caption has a priod')
-    parser.add_argument('--val', default = 0,type=int,help='number of validiation images')
-    parser.add_argument('--test', default = 0,type=int,help='number of test images')
+    parser.add_argument('--remove-period', default = True,type=bool,help='remove the last period if a caption has a priod')
+    parser.add_argument('--val', default = 2500,type=int,help='number of validiation images')
+    parser.add_argument('--test', default = 2500,type=int,help='number of test images')
     # parser.add_argument('--keep-info', default = False,type=bool,help='keep other image information other than "file_path" in the input json')
     args = parser.parse_args()
 
@@ -73,9 +78,9 @@ if __name__ == '__main__':
     random.shuffle(jsonData)
 
     for i,img in enumerate(jsonData):
-        if i < arg.val:
+        if i < args.val:
             val_data.append(img)
-        elif i < arg.test + arg.val: 
+        elif i < args.test + args.val: 
             test_data.append(img)
         else:
             train_data.append(img)
