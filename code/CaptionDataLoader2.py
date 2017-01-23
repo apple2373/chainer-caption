@@ -11,14 +11,15 @@ from image_loader import Image_loader
 from ResNet50 import ResNet
 
 class CaptionDataLoader(object):
-    def __init__(self,dataset,image_feature_root,image_root="",preload_all_features=False,image_mean="imagenet"):
+    def __init__(self,dataset,image_feature_root,image_root="",preload_all_features=False,image_mean="imagenet",holding_raw_captions=False):
+        self.holding_raw_captions=holding_raw_captions
         self.image_loader=Image_loader(mean=image_mean)
         self.captions=dataset["captions"]
+        self.num_captions=len(self.captions)
         self.images=dataset["images"]
         self.caption2image={caption["idx"]:caption["image_idx"] for caption in dataset["captions"]}
         self.image_feature_root=image_feature_root+"/"#path to preprocessed image features. It assume the feature are stored with the same name but only extension is changed to .npz
         self.image_root=image_root+"/"#path to image directory
-
         self.random_indicies = np.random.permutation(len(self.captions))
         self.index_count=0
         self.epoch=1
@@ -44,8 +45,10 @@ class CaptionDataLoader(object):
                 batch_images=self.image_features[[self.caption2image[i] for i in batch_caption_indicies]]
             else:
                 batch_images=np.array([np.load("%s/%s.npz"%(self.image_feature_root, os.path.splitext(self.images[self.caption2image[i]]["file_path"])[0] ))['arr_0'] for i in batch_caption_indicies])
-            
-        batch_word_indices=[np.array(self.captions[i]["caption"],dtype=np.int32) for i in batch_caption_indicies]
+        if self.holding_raw_captions:
+            batch_word_indices=[self.captions[i]["caption"] for i in batch_caption_indicies]
+        else:
+            batch_word_indices=[np.array(self.captions[i]["caption"],dtype=np.int32) for i in batch_caption_indicies]
 
         return batch_images,batch_word_indices
 

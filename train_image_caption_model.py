@@ -10,7 +10,7 @@ import json
 
 import sys
 import os
-os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
+# os.environ["CHAINER_TYPE_CHECK"] = "0" #to disable type check. 
 import chainer 
 
 import chainer.functions as F
@@ -20,6 +20,7 @@ from chainer import Function, FunctionSet, Variable, optimizers, serializers
 sys.path.append('./code')
 from Image2CaptionDecoder import Image2CaptionDecoder
 from CaptionDataLoader2 import CaptionDataLoader
+from CaptionMultiDataLoader import CaptionMultiDataLoader
 from CaptionEvaluater import CaptionEvaluater
 from CaptionGenerator import CaptionGenerator
 from ResNet50 import ResNet
@@ -29,8 +30,8 @@ from ResNet50 import ResNet
 #Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-g", "--gpu",default=-1, type=int, help=u"GPU ID.CPU is -1")
-parser.add_argument("--savedir",default="./experiments/experiment1_cnn", type=str, help=u"The directory to save models and log")
-parser.add_argument('--captions',default='./data/MSCOCO/mscoco_train2014_all_preprocessed.json', type=str,help='path to preprocessed caption json')
+parser.add_argument("--savedir",default="./experiments/ex1", type=str, help=u"The directory to save models and log")
+parser.add_argument('--captions',default='./data/MSCOCO/mscoco_train2014_all_preprocessed.json', type=str,help='path to preprocessed caption json or ,muiti like <en>:./data/MSCOCO/mscoco_train2014_all_preprocessed.json;<jp>:./data/MSCOCO/mscoco_jp_all_preprocessed.json;')
 parser.add_argument('--image_root',default='./data/MSCOCO/MSCOCO_raw_images/', type=str,help='path to image directory')
 parser.add_argument('--image_feature_root',default='./data/MSCOCO/MSCOCO_ResNet50_features/', type=str,help='path to CNN features directory')
 parser.add_argument('--preload',default=False,type=bool,help='preload all image features onto RAM')
@@ -49,7 +50,6 @@ if not os.path.isdir(args.savedir):
     os.makedirs(args.savedir)
     print("made the save directory",args.savedir)
 
-
 #Gpu Setting
 if args.gpu >= 0:
     xp = cuda.cupy 
@@ -57,26 +57,48 @@ if args.gpu >= 0:
 else:
     xp=np
 
-#make evaluater
-evaluater=CaptionEvaluater()
-
 #Prepare Data
 print("loading preprocessed training data")
 
-with open(args.captions, 'r') as f:
-    captions = json.load(f)
+#make evaluater
+evaluater=CaptionEvaluater()
+val_datasets={}#dic to keep valdiation dataset
+test_datasets={}#dic to keep test dataset
 
-val_truth={cap["file_path"]:cap["captions"] for cap in captions["val"]}
-test_truth={cap["file_path"]:cap["captions"] for cap in captions["test"]}
-evaluater.set_ground_truth(val_truth)
-del captions["val"]
-del captions["test"]
-dataset=CaptionDataLoader(captions,image_feature_root=args.image_feature_root,image_root=args.image_root,preload_all_features=args.preload)
+if args.captions[-1] == ";":
+    dataset=CaptionMultiDataLoader(datasets_paths=args.captions,image_feature_root=args.image_feature_root,image_root=args.image_root,preload=args.preload)
+    for lang in dataset.all_captions_dic.keys():
+        val_datasets[lang] = dataset.all_captions_dic[lang]["val"]
+        test_datasets[lang] = dataset.all_captions_dic[lang]["test"]
+    dictonary_place="/tmp/golbal_caption_dic.json"
+    with open(dictonary_place, 'w') as f:
+        json.dump(dataset.word2index, f, sort_keys=True, indent=4)
+    #本当はこれ使うべき？
+    # import tempfile
+    # import shutil
+    # # 一時ディレクトリを作成
+    # temp_dir = tempfile.mkdtemp()
+    # # テスト用のファイルを作成
+    # test_src = os.path.join(self.temp_dir, 'test')
+    # with open(test_src, 'w') as f:
+    #     json.dump(dataset.word2index, f, sort_keys=True, indent=4)
+    #  # 一時ディレクトリを削除
+    # shutil.rmtree(temp_dir)
+
+else:
+    with open(args.captions, 'r') as f:
+        captions = json.load(f)
+    val_datasets={"<sos>":{cap["file_path"]:cap["captions"] for cap in captions["val"]}}
+    test_datasets={"<sos>":{cap["file_path"]:cap["captions"] for cap in captions["test"]}}
+    del captions["val"]
+    del captions["test"]
+    dataset=CaptionDataLoader(captions,image_feature_root=args.image_feature_root,image_root=args.image_root,preload_all_features=args.preload)
+    dictonary_place=args.captions
 
 caption_generator=CaptionGenerator(
     rnn_model_place=args.rnn_model,
     cnn_model_place=args.cnn_model,
-    dictonary_place=args.captions,
+    dictonary_place=dictonary_place,
     beamsize=1,
     depth_limit=args.depth,
     gpu_id=args.gpu,
@@ -86,7 +108,7 @@ caption_generator=CaptionGenerator(
 #Model Preparation
 print("preparing caption generation models and training process")
 model=chainer.Chain()
-model.rnn=Image2CaptionDecoder(vocaburary_size=len(captions["words"]),hidden_dim=args.hidden)
+model.rnn=Image2CaptionDecoder(vocaburary_size=len(caption_generator.index2token),hidden_dim=args.hidden)
 model.cnn=ResNet()
 model.rnn.train=True
 model.cnn.train=True
@@ -108,7 +130,37 @@ optimizer.setup(model.rnn)
 #Trining Setting
 batch_size=args.batch
 grad_clip = 1.0
-num_train_data=len(captions)
+num_train_data=dataset.num_captions
+evaluation_log={}
+for lang in val_datasets.keys():
+    evaluation_log[lang]={}
+    evaluation_log[lang]["val"]=[]
+
+def evaluate(args,caption_generator,evaluater,truth,lang):
+    evaluater.set_ground_truth(truth)
+    caption_generator.first_word=lang
+    predicted={}
+    i=1
+    for file_path in truth:
+        sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
+        print(i,sentence)
+        predicted[file_path]=[sentence]
+        i+=1
+
+    print("computing evaluation scores")
+    scores=evaluater.evaluate(predicted)
+    print(scores)
+    return scores
+
+def compute_best_epoch(evaluation_log,num_epochs):
+    ciders=[]
+    for i in num_epochs:
+        cider_sum=0
+        for lang in evaluation_log.keys():
+            cider_sum+=evaluation_log[lang]["val"][i]["cider"]
+        ciders.append(cider_sum)
+    best_epoch=np.argmax(cider_sum)+1#because epoch starts from 1
+    return best_epoch
 
 #Start Training
 print('training started')
@@ -116,8 +168,6 @@ print('training started')
 sum_loss = 0
 print(dataset.epoch)
 iteration = 1
-evaluation_log={}
-evaluation_log["val"]=[]
 while (dataset.epoch <= args.epoch):
     optimizer.zero_grads()
     current_epoch=dataset.epoch
@@ -182,51 +232,29 @@ while (dataset.epoch <= args.epoch):
         caption_generator.cnn_model.train=False
         caption_generator.rnn_model=model.rnn
         caption_generator.rnn_model.train=False
-
-        val_predicted={}
-        i=1
-        for file_path in val_truth:
-            i+=1
-            sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
-            print(i,sentence)
-            val_predicted[file_path]=[sentence]
-
-        print("computing evaluation scores")
-        scores=evaluater.evaluate(val_predicted)
-        print(scores)
-
-        evaluation_log["val"].append(scores)
-        with open(args.savedir+"/evaluation_log.json", "w") as f:
-            json.dump(evaluation_log, f, sort_keys=True, indent=4)
-
+        for lang,truth in val_datasets.iteritems():
+            scores=evaluate(args,caption_generator,evaluater,truth,lang)
+            evaluation_log[lang]["val"].append(scores)
+            with open(args.savedir+"/evaluation_log.json", "w") as f:
+                json.dump(evaluation_log, f, sort_keys=True, indent=4)
         model.rnn.train=True
         model.cnn.train=True
 
 
 #finalize the evaliation in test score
-best_epoch=np.argmax([score["cider"] for score in evaluation_log["val"]])+1#because epoch start from 1
+best_epoch=compute_best_epoch(evaluation_log)
 print("best epoch is %d"%best_epoch)
 if train_cnn: 
     serializers.load_hdf5(args.savedir+"/caption_model_resnet%d.model"%best_epoch, caption_generator.cnn_model)
 serializers.load_hdf5(args.savedir+"/caption_model%d.model"%best_epoch, caption_generator.rnn_model)
-
 caption_generator.cnn_model.train=False
 caption_generator.rnn_model.train=False
 
-test_predicted={}
-i=1
-for file_path in test_truth:
-    i+=1
-    sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
-    print(i,sentence)
-    test_predicted[file_path]=[sentence]
-
 print("computing final evaluation scores")
-evaluater.set_ground_truth(test_truth)
-scores=evaluater.evaluate(test_predicted)
-print(scores)
+for lang,truth in test_datasets.iteritems():
+    scores=evaluate(args,caption_generator,evaluater,truth,lang)
+    evaluation_log[lang]["test"]=scores
+    evaluation_log[lang]["best_epoch"]=best_epoch
 
-evaluation_log["test"]=scores
-evaluation_log["best_epoch"]=best_epoch
 with open(args.savedir+"/evaluation_log.json", "w") as f:
     json.dump(evaluation_log, f, sort_keys=True, indent=4)
