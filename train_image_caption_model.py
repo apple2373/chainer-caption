@@ -38,7 +38,7 @@ parser.add_argument("--epoch",default=60, type=int, help=u"the number of epochs"
 parser.add_argument("--batch",default=128, type=int, help=u"mini batchsize")
 parser.add_argument("--batch-cnn",default=16, type=int, help=u"mini batchsize when tuning cnn")
 parser.add_argument("--hidden",default=512, type=int, help=u"number of hidden units in LSTM")
-parser.add_argument("--cnn-tune-after",default=40, type=int, help=u"epoch starting to tune CNN. -1 means never")
+parser.add_argument("--cnn-tune-after",default=-1, type=int, help=u"epoch starting to tune CNN. -1 means never")
 parser.add_argument('--cnn-model', type=str, default='./data/ResNet50.model',help='place of the ResNet model')
 parser.add_argument('--rnn-model', type=str, default='',help='place of the RNN model')
 parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
@@ -47,7 +47,7 @@ args = parser.parse_args()
 #save dir
 if not os.path.isdir(args.savedir):
     os.makedirs(args.savedir)
-    print "made the save directory",args.savedir
+    print("made the save directory",args.savedir)
 
 
 #Gpu Setting
@@ -71,7 +71,7 @@ test_truth={cap["file_path"]:cap["captions"] for cap in captions["test"]}
 evaluater.set_ground_truth(val_truth)
 del captions["val"]
 del captions["test"]
-dataset=CaptionDataLoader(captions,image_feature_root=args.image_feature_root,image_root=args.image_root)
+dataset=CaptionDataLoader(captions,image_feature_root=args.image_feature_root,image_root=args.image_root,preload_all_features=args.preload)
 
 caption_generator=CaptionGenerator(
     rnn_model_place=args.rnn_model,
@@ -84,7 +84,7 @@ caption_generator=CaptionGenerator(
     )
 
 #Model Preparation
-print "preparing caption generation models and training process"
+print("preparing caption generation models and training process")
 model=chainer.Chain()
 model.rnn=Image2CaptionDecoder(vocaburary_size=len(captions["words"]),hidden_dim=args.hidden)
 model.cnn=ResNet()
@@ -101,7 +101,7 @@ if args.gpu >= 0:
 
 #set up optimizers
 optimizer = optimizers.Adam()
-optimizer.setup(args.rnn_model)
+optimizer.setup(model.rnn)
 # optimizer_cnn = optimizers.Adam()
 # optimizer_cnn.setup(model.cnn)
 
@@ -111,10 +111,10 @@ grad_clip = 1.0
 num_train_data=len(captions)
 
 #Start Training
-print 'training started'
+print('training started')
 
 sum_loss = 0
-print dataset.epoch
+print(dataset.epoch)
 iteration = 1
 evaluation_log={}
 evaluation_log["val"]=[]
@@ -123,6 +123,7 @@ while (dataset.epoch <= args.epoch):
     current_epoch=dataset.epoch
     train_cnn = current_epoch > args.cnn_tune_after and args.cnn_tune_after >= 0
 
+    #prepare training batch
     if train_cnn: 
         batch_size=args.batch_cnn
         #optimizer_cnn.zero_grads()
@@ -143,10 +144,11 @@ while (dataset.epoch <= args.epoch):
     hx,cx = model.rnn.input_cnn_feature(hx,cx,image_feature)
     loss = model.rnn(hx, cx, x_batch)
 
-    print loss.data
+    print(loss.data)
     with open(args.savedir+"/real_loss.txt", "a") as f:
         f.write(str(loss.data)+'\n') 
 
+    #backword and update parameters
     loss.backward()
     loss.unchain_backward()
     optimizer.clip_grads(grad_clip)
@@ -160,7 +162,9 @@ while (dataset.epoch <= args.epoch):
     iteration+=1
     
     if dataset.epoch - current_epoch > 0:
-        print "epoch:",current_epoch
+        print("epoch:",current_epoch)
+
+        #save model
         if train_cnn: 
             serializers.save_hdf5(args.savedir+"/caption_model_resnet%d.model"%current_epoch, model.cnn)
         serializers.save_hdf5(args.savedir+"/caption_model%d.model"%current_epoch, model.rnn)
@@ -199,7 +203,7 @@ while (dataset.epoch <= args.epoch):
         model.cnn.train=True
 
 
-#finalize the evaliation
+#finalize the evaliation in test score
 best_epoch=np.argmax([score["cider"] for score in evaluation_log["val"]])+1#because epoch start from 1
 print("best epoch is %d"%best_epoch)
 if train_cnn: 

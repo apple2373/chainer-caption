@@ -3,7 +3,86 @@
 #First dataset preparation
 python3 create_MSCOCO_en_jp_dataset.py \
 --en ../data/MSCOCO/captions_train2014.json \
---out-en ../data/MSCOCO/mscoco_jp.json \
+--out-en ../data/MSCOCO/mscoco_en_only_26k.json \
 --jp ../data/MSCOCO/yjcaptions26k_clean.json \
---out-jp ../data/MSCOCO/mscoco_en_intersect_jp.json 
+--out-jp ../data/MSCOCO/mscoco_jp.json
+
+#English only
+python preprocess_captions.py \
+--input ../data/MSCOCO/mscoco_en_only_26k.json \
+--output ../data/MSCOCO/mscoco_en_only_26k_all_preprocessed.json \
+
+('total distinct words:', 13926)
+top 20 frequent words:
+(u'a', 177254)
+('<sos>', 107551)
+('<eos>', 107551)
+(u'on', 38979)
+(u'of', 36290)
+(u'the', 36264)
+(u'in', 33343)
+(u'with', 27971)
+(u'and', 25473)
+(u'is', 17854)
+(u'man', 13478)
+(u'to', 12747)
+(u'sitting', 9491)
+(u'an', 9289)
+(u'two', 8657)
+(u',', 8174)
+(u'at', 8025)
+(u'people', 7898)
+(u'standing', 7594)
+(u'are', 7524)
+('total distinct words after the cutoff:', 4852)
+
+python train_image_caption_model.py \
+--gpu 0 \
+--savedir ./experiments/en_only_1 \
+--captions ./data/MSCOCO/mscoco_en_only_26k_all_preprocessed.json \
+--preload True \
+--epoch 40 \
+--batch 128 \
+--hidden 512  \
+--cnn-tune-after -1 \
+
+#Japanese only
+python preprocess_captions.py \
+--input ../data/MSCOCO/mscoco_jp.json \
+--output ../data/MSCOCO/mscoco_jp_all_preprocessed.json \
+--jp True
+
+('total distinct words:', 18409)
+top 20 frequent words:
+(u'\u306e', 108985)
+('<sos>', 106876)
+('<eos>', 106876)
+(u'\u3002', 105304)
+(u'\u304c', 100198)
+(u'\u3066', 96912)
+(u'\u307e\u3059', 95248)
+(u'\u3044', 71860)
+(u'\u306b', 69986)
+(u'\u3092', 56543)
+(u'\u3067', 29617)
+(u'\u305f', 25053)
+(u'\u3001', 22435)
+(u'\u3057', 17387)
+(u'\u308c', 15945)
+(u'\u3044\u308b', 15798)
+(u'\u4eba', 14870)
+(u'\u4e0a', 14786)
+(u'\u3068', 13883)
+(u'\u3042\u308a', 13537)
+('total distinct words after the cutoff:', 5955)
+
+python train_image_caption_model.py \
+--gpu 0 \
+--savedir ./experiments/jp_only_1 \
+--captions ./data/MSCOCO/mscoco_jp_all_preprocessed.json \
+--preload True \
+--epoch 40 \
+--batch 128 \
+--hidden 512  \
+--cnn-tune-after -1 \
 

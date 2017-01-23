@@ -5,6 +5,7 @@
 evaluate captions by Blue, Rouge, and Cider 
 
 This can be used for any langauge assumning that the inputs are already segmented (i.e. tokenized). 
+The ground truth should be lowered before passing to here..
 '''
 
 import sys
@@ -28,6 +29,11 @@ class CaptionEvaluater(object):
         self.remove_pattern = r"[{}]".format(remove) # create the pattern
 
     def remove_punctuation(self,line):
+        #I am not sure how unicode works in python, so just in case.
+        line=line.replace(u"<unk>","")
+        line=line.replace("<unk>","")
+        line=line.replace(u"。","")
+        line=line.replace('\u3002',"")
         return re.sub(self.remove_pattern, "", line) 
 
     def trnasform_utf8(self,line):
@@ -109,11 +115,11 @@ if __name__ == '__main__':
 
     #prediceted は一つだけじゃないとダメ
     predicted={}
-    predicted['262148']=['人 が オレンジ色 の シャツ を 着て 立って います。']
-    predicted[262148]=['a man riding a skateboard down a ramp。']
-    predicted[393225]=['a bowl of soup with carrots and a spoon.']
+    predicted['262148']=['人 が オレンジ色 の シャツ を 着て 立って <unk> います。']
+    predicted[262148]=['A man riding a skateboard down a ramp。']
+    predicted[393225]=['A bowl of soup with carrots and a spoon.']
     predicted[1]=['a man riding a skateboard down a ramp。']
-    predicted[2]=['a bowl of soup with carrots and a spoon、']
+    predicted[2]=['a bowl of soup with carrots and a spoon、<unk>']
     #keyは数字でも文字列でもどっちでもいいけど、ground truth と predicedで対応が取れるように！
 
     evaluater=CaptionEvaluater()

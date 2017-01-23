@@ -41,7 +41,7 @@ class CaptionDataLoader(object):
             batch_images= np.array( [self.image_loader.load(self.image_root+self.images[self.caption2image[i]]["file_path"],expand_batch_dim=False) for i in batch_caption_indicies] )
         else:
             if self.preload_all_features:
-                batch_images=self.image_features[[self.caption2image[i] in batch_caption_indicies]]
+                batch_images=self.image_features[[self.caption2image[i] for i in batch_caption_indicies]]
             else:
                 batch_images=np.array([np.load("%s/%s.npz"%(self.image_feature_root, os.path.splitext(self.images[self.caption2image[i]]["file_path"])[0] ))['arr_0'] for i in batch_caption_indicies])
             

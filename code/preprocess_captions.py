@@ -75,8 +75,18 @@ if __name__ == '__main__':
 
     for i,img in enumerate(jsonData):
         if i < args.val:
+            new_captions=[]
+            for caption in img["captions"]:
+                new_cap=" ".join(segmenter.segment(caption.lower()))
+                new_captions.append(new_cap)
+            img["captions"]=new_captions
             val_data.append(img)
         elif i < args.test + args.val: 
+            new_captions=[]
+            for caption in img["captions"]:
+                new_cap=" ".join(segmenter.segment(caption.lower()))
+                new_captions.append(new_cap)
+            img["captions"]=new_captions
             test_data.append(img)
         else:
             train_data.append(img)
