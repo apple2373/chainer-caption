@@ -76,7 +76,7 @@ curl -X POST -F image=@./sample_imgs/COCO_val2014_000000185546.jpg http://localh
 
 
 ##I want to train the model by myself.
-* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
+\* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 I made preprocessed files available. You can download like this.
 ```
 bash download.sh train
@@ -89,7 +89,7 @@ python train_caption_model.py --savedir ./experiment1 --epoch 40 --batch 120 --g
 ```
 
 ##I want to train the model from my own data.
-* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
+\* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 Alright, you need to do additional amount of work.
 ```
 cd code
