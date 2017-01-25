@@ -227,4 +227,7 @@ python generate_caption_table.py \
 --predicted  ../experiment1multi/caption_model40_val_predicted_jp_beam5.json \
 --output ../output_multi_jp
 
-
+python generate_caption_table.py \
+--dir ../data/MSCOCO/train2014/ \
+--predicted  ../experiment1multi/caption_model40_val_predicted_jp_beam5.json \
+--output ../output_multi_jp

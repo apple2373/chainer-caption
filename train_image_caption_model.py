@@ -42,6 +42,9 @@ parser.add_argument("--hidden",default=512, type=int, help=u"number of hidden un
 parser.add_argument("--cnn-tune-after",default=-1, type=int, help=u"epoch starting to tune CNN. -1 means never")
 parser.add_argument('--cnn-model', type=str, default='./data/ResNet50.model',help='place of the ResNet model')
 parser.add_argument('--rnn-model', type=str, default='',help='place of the RNN model')
+parser.add_argument("--cnn-lr",default=1e-5, type=float, help=u"initial learning rate for cnn")
+parser.add_argument("--rnn-lr",default=1e-3, type=float, help=u"initial learning rate for rnn")
+parser.add_argument('--save-opt',default=False,type=bool,help='save optimizer or not')
 parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
 args = parser.parse_args()
 
@@ -124,8 +127,11 @@ if args.gpu >= 0:
 #set up optimizers
 optimizer = optimizers.Adam()
 optimizer.setup(model.rnn)
-# optimizer_cnn = optimizers.Adam()
-# optimizer_cnn.setup(model.cnn)
+optimizer.alpha=args.rnn_lr
+if args.cnn_tune_after >= 0:
+    optimizer_cnn = optimizers.Adam()
+    optimizer_cnn.setup(model.cnn)
+    optimizer_cnn.alpha=args.cnn_lr
 
 #Trining Setting
 batch_size=args.batch
@@ -154,12 +160,13 @@ def evaluate(args,caption_generator,evaluater,truth,lang):
 
 def compute_best_epoch(evaluation_log,num_epochs):
     ciders=[]
-    for i in num_epochs:
+    for i in xrange(num_epochs):
         cider_sum=0
         for lang in evaluation_log.keys():
             cider_sum+=evaluation_log[lang]["val"][i]["cider"]
         ciders.append(cider_sum)
-    best_epoch=np.argmax(cider_sum)+1#because epoch starts from 1
+    print ciders
+    best_epoch=np.argmax(ciders)+1#because epoch starts from 1
     return best_epoch
 
 #Start Training
@@ -176,7 +183,7 @@ while (dataset.epoch <= args.epoch):
     #prepare training batch
     if train_cnn: 
         batch_size=args.batch_cnn
-        #optimizer_cnn.zero_grads()
+        optimizer_cnn.zero_grads()
         images,x_batch=dataset.get_batch(batch_size,raw_image=True)
         if args.gpu >= 0:
             images = cuda.to_gpu(images, device=args.gpu)
@@ -204,9 +211,8 @@ while (dataset.epoch <= args.epoch):
     optimizer.clip_grads(grad_clip)
     optimizer.update()
     if train_cnn:
-        pass 
-        # optimizer_cnn.clip_grads(grad_clip)
-        # optimizer_cnn.update()
+        optimizer_cnn.clip_grads(grad_clip)
+        optimizer_cnn.update()
     
     sum_loss += loss.data * batch_size
     iteration+=1
@@ -218,7 +224,10 @@ while (dataset.epoch <= args.epoch):
         if train_cnn: 
             serializers.save_hdf5(args.savedir+"/caption_model_resnet%d.model"%current_epoch, model.cnn)
         serializers.save_hdf5(args.savedir+"/caption_model%d.model"%current_epoch, model.rnn)
-        serializers.save_hdf5(args.savedir+"/optimizer%d.model"%current_epoch, optimizer)
+        if args.save_opt: 
+            serializers.save_hdf5(args.savedir+"/optimizer%d.model"%current_epoch, optimizer)
+        if args.save_opt and train_cnn:
+            serializers.save_hdf5(args.savedir+"/optimizer_cnn%d.model"%current_epoch, optimizer_cnn)
 
         mean_loss = sum_loss / num_train_data
         with open(args.savedir+"/mean_loss.txt", "a") as f:
@@ -240,9 +249,8 @@ while (dataset.epoch <= args.epoch):
         model.rnn.train=True
         model.cnn.train=True
 
-
 #finalize the evaliation in test score
-best_epoch=compute_best_epoch(evaluation_log)
+best_epoch=compute_best_epoch(evaluation_log,args.epoch)
 print("best epoch is %d"%best_epoch)
 if train_cnn: 
     serializers.load_hdf5(args.savedir+"/caption_model_resnet%d.model"%best_epoch, caption_generator.cnn_model)

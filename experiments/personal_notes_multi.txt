@@ -96,4 +96,3 @@ python train_image_caption_model.py \
 --batch 128 \
 --hidden 512  \
 --cnn-tune-after -1 \
-
