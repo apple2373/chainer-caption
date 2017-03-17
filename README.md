@@ -1,4 +1,4 @@
-#image caption generation by chainer 
+# image caption generation by chainer 
 
 This repository contains an implementation of typical image caption generation based on neural network (i.e. CNN + RNN). The model first extracts the image feature by CNN and then generates captions by RNN. CNN is ResNet50 and RNN is a standard LSTM .
 
@@ -8,7 +8,7 @@ I made pre-trained models available. For English captions, the model achieves CI
 
 <img src="sample.png" >
 
-##requirements
+## requirements
 chainer 1.19.0  http://chainer.org
 and some more packages.  
 !!Warning ** Be sure to use chainer 1.19.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
@@ -18,7 +18,7 @@ If you are new, I strongly recoomend Anaconda (https://www.continuum.io/download
 pip install chainer==1.19.0 
 ```
 
-##I just want to generate caption!
+## I just want to generate caption!
 OK, first, you need to download the models and other preprocessed files.
 ```
 bash download.sh
@@ -75,7 +75,7 @@ curl -X POST -F image=@./sample_imgs/COCO_val2014_000000185546.jpg http://localh
 ```
 
 
-##I want to train the model by myself.
+## I want to train the model by myself.
 \* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 I made preprocessed files available. You can download like this.
 ```
@@ -88,7 +88,7 @@ python train_caption_model.py --savedir ./experiment1 --epoch 40 --batch 120 --g
 --captions ./data/MSCOCO/MSCOCO/mscoco_caption_train2014_processed.json \
 ```
 
-##I want to train the model from my own data.
+## I want to train the model from my own data.
 \* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 Alright, you need to do additional amount of work.
 ```
