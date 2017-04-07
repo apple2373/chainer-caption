@@ -25,11 +25,12 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str,help='the place of output file')
     parser.add_argument('--char', default = False,type=bool,help='character based tokenization. e.g. for Japanese')
     parser.add_argument('--jp', default = False,type=bool,help='use Japanese segmenter. Install by "pip install tinysegmenter"')
+    parser.add_argument('--cn', default = False,type=bool,help='use Chinese segmenter. Install by "pip install jieba"')
     parser.add_argument('--cut', default = 5,type=int,help='cut off frequency. this frequency will be the lowest to be kept.')
     parser.add_argument('--lower', default = True,type=bool,help='make everything into lower case')
     parser.add_argument('--remove-period', default = True,type=bool,help='remove the last period if a caption has a priod')
-    parser.add_argument('--val', default = 2500,type=int,help='number of validiation images')
-    parser.add_argument('--test', default = 2500,type=int,help='number of test images')
+    parser.add_argument('--val', default = 2000,type=int,help='number of validiation images')
+    parser.add_argument('--test', default = 2000,type=int,help='number of test images')
     # parser.add_argument('--keep-info', default = False,type=bool,help='keep other image information other than "file_path" in the input json')
     args = parser.parse_args()
 
@@ -40,6 +41,10 @@ if __name__ == '__main__':
                 import tinysegmenter
                 self.tinysegmenter = tinysegmenter.TinySegmenter()
                 self.segmenter= lambda sent: self.tinysegmenter.tokenize(sent)
+            elif self.args.cn:
+                import jieba
+                jieba.cut("我来到北京清华大")
+                self.segmenter= lambda sent: list(jieba.cut(sent))
             elif not args.char:
                 import nltk
                 self.nltk=nltk
@@ -116,7 +121,7 @@ if __name__ == '__main__':
     print("total distinct words:",len(freq_count))
     print("top 20 frequent words:")
     for word,freq in freq_count.most_common(20):
-        print(word,freq)
+        print(u"(%s,%s)"%(word,freq))
 
     #remove words that appears less than the cut
     ukn_freq=0

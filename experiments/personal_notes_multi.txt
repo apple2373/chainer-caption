@@ -6,35 +6,38 @@ python3 create_MSCOCO_en_jp_dataset.py \
 --out-en ../data/MSCOCO/mscoco_en_only_26k.json \
 --jp ../data/MSCOCO/yjcaptions26k_clean.json \
 --out-jp ../data/MSCOCO/mscoco_jp.json
+common image ids 26500
 
 #English only
 python preprocess_captions.py \
 --input ../data/MSCOCO/mscoco_en_only_26k.json \
 --output ../data/MSCOCO/mscoco_en_only_26k_all_preprocessed.json \
-
-('total distinct words:', 13926)
+--val 2000 \
+--test 2000 \
+('total distinct words:', 14216)
 top 20 frequent words:
-(u'a', 177254)
-('<sos>', 107551)
-('<eos>', 107551)
-(u'on', 38979)
-(u'of', 36290)
-(u'the', 36264)
-(u'in', 33343)
-(u'with', 27971)
-(u'and', 25473)
-(u'is', 17854)
-(u'man', 13478)
-(u'to', 12747)
-(u'sitting', 9491)
-(u'an', 9289)
-(u'two', 8657)
-(u',', 8174)
-(u'at', 8025)
-(u'people', 7898)
-(u'standing', 7594)
-(u'are', 7524)
-('total distinct words after the cutoff:', 4852)
+(u'a', 185335)
+('<sos>', 112551)
+('<eos>', 112551)
+(u'on', 40804)
+(u'of', 38102)
+(u'the', 37914)
+(u'in', 34863)
+(u'with', 29267)
+(u'and', 26625)
+(u'is', 18701)
+(u'man', 14062)
+(u'to', 13330)
+(u'sitting', 9963)
+(u'an', 9699)
+(u'two', 9055)
+(u',', 8518)
+(u'at', 8377)
+(u'people', 8227)
+(u'standing', 7998)
+(u'are', 7867)
+('total distinct words after the cutoff:', 4948)
+('The output file is saved to', '../data/MSCOCO/mscoco_en_only_26k_all_preprocessed.json')
 
 python train_image_caption_model.py \
 --gpu 0 \
@@ -50,31 +53,34 @@ python train_image_caption_model.py \
 python preprocess_captions.py \
 --input ../data/MSCOCO/mscoco_jp.json \
 --output ../data/MSCOCO/mscoco_jp_all_preprocessed.json \
---jp True
+--jp True \
+--val 2000 \
+--test 2000 \
 
-('total distinct words:', 18409)
+('total distinct words:', 18823)
 top 20 frequent words:
-(u'\u306e', 108985)
-('<sos>', 106876)
-('<eos>', 106876)
-(u'\u3002', 105304)
-(u'\u304c', 100198)
-(u'\u3066', 96912)
-(u'\u307e\u3059', 95248)
-(u'\u3044', 71860)
-(u'\u306b', 69986)
-(u'\u3092', 56543)
-(u'\u3067', 29617)
-(u'\u305f', 25053)
-(u'\u3001', 22435)
-(u'\u3057', 17387)
-(u'\u308c', 15945)
-(u'\u3044\u308b', 15798)
-(u'\u4eba', 14870)
-(u'\u4e0a', 14786)
-(u'\u3068', 13883)
-(u'\u3042\u308a', 13537)
-('total distinct words after the cutoff:', 5955)
+(の,114121)
+(<sos>,111852)
+(<eos>,111852)
+(。,110211)
+(が,104870)
+(て,101423)
+(ます,99709)
+(い,75191)
+(に,73340)
+(を,59157)
+(で,31035)
+(た,26239)
+(、,23518)
+(し,18194)
+(れ,16701)
+(いる,16559)
+(人,15548)
+(上,15510)
+(と,14558)
+(あり,14184)
+('total distinct words after the cutoff:', 6098)
+('The output file is saved to', '../data/MSCOCO/mscoco_jp_all_preprocessed.json')
 
 python train_image_caption_model.py \
 --gpu 0 \
@@ -89,9 +95,51 @@ python train_image_caption_model.py \
 #muti
 python train_image_caption_model.py \
 --gpu 0 \
---savedir ./experiments/en_jp_multi \
+--savedir ./experiments/en_jp_multi_1 \
 --captions "<en>:./data/MSCOCO/mscoco_train2014_all_preprocessed.json;<jp>:./data/MSCOCO/mscoco_jp_all_preprocessed.json;" \
 --preload True \
+--epoch 40 \
+--batch 128 \
+--hidden 512  \
+--cnn-tune-after -1 \
+
+#Ch-Jp
+#First dataset preparation
+python3 create_MSCOCO_cn_dataset_intersect_jp.py \
+--cn ../data/MSCOCO/captions_train2014_cn_translation.json \
+--out-cn ../data/MSCOCO/mscoco_mt_ch_only_26k.json \
+--jp ../data/MSCOCO/yjcaptions26k_clean.json
+
+common image ids 26500
+26500
+../data/MSCOCO/mscoco_mt_ch_only_26k.json
+
+#Chinese only
+python preprocess_captions.py \
+--input ../data/MSCOCO/mscoco_mt_ch_only_26k.json \
+--output ../data/MSCOCO/mscoco_mt_ch_only_26k_all_preprocessed.json \
+--cn True \
+--val 2000 \
+--test 2000 \
+
+
+#Chinese only
+python train_image_caption_model.py \
+--gpu 0 \
+--savedir ./experiments/cn_only_1 \
+--captions ./data/MSCOCO/mscoco_mt_ch_only_26k_all_preprocessed.json \
+--preload True \
+--epoch 40 \
+--batch 128 \
+--hidden 512  \
+--cnn-tune-after -1 \
+
+#Chinese + Japanese
+python train_image_caption_model.py \
+--gpu 0 \
+--savedir ./experiments/cn_jp_multi_1 \
+--captions "<cn>:./data/MSCOCO/mscoco_mt_ch_only_26k_all_preprocessed.json;<jp>:./data/MSCOCO/mscoco_jp_all_preprocessed.json;" \
+--preload False \
 --epoch 40 \
 --batch 128 \
 --hidden 512  \

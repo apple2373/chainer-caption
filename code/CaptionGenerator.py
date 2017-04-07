@@ -66,7 +66,7 @@ class CaptionGenerator(object):
     def parse_dic(self,dictonary_place):
         with open(dictonary_place, 'r') as f:
             json_file = json.load(f)
-        if isinstance(json_file['words'], list):
+        if len(json_file) < 10:#this is ad-hock. I need to distinguish new format and old format...
             self.token2index = { word['word']:word['idx'] for word in json_file["words"]}
         else:
             self.token2index = json_file

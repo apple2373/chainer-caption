@@ -148,8 +148,8 @@ def evaluate(args,caption_generator,evaluater,truth,lang):
     predicted={}
     i=1
     for file_path in truth:
-        sentence=" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
-        print(i,sentence)
+        sentence=u" ".join(caption_generator.generate(args.image_root+"/"+file_path)[0]["sentence"][1:-1])
+        print("%d %s"%(i,sentence))
         predicted[file_path]=[sentence]
         i+=1
 
