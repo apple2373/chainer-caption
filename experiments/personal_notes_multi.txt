@@ -103,6 +103,18 @@ python train_image_caption_model.py \
 --hidden 512  \
 --cnn-tune-after -1 \
 
+#muti
+python train_image_caption_model.py \
+--gpu 0 \
+--savedir ./experiments/en_jp_multi_2layer \
+--captions "<en>:./data/MSCOCO/mscoco_train2014_all_preprocessed.json;<jp>:./data/MSCOCO/mscoco_jp_all_preprocessed.json;" \
+--preload True \
+--epoch 40 \
+--batch 128 \
+--hidden 512  \
+--layers  2 \
+--cnn-tune-after -1 \
+
 #Ch-Jp
 #First dataset preparation
 python3 create_MSCOCO_cn_dataset_intersect_jp.py \

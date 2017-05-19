@@ -46,6 +46,7 @@ parser.add_argument("--cnn-lr",default=1e-5, type=float, help=u"initial learning
 parser.add_argument("--rnn-lr",default=1e-3, type=float, help=u"initial learning rate for rnn")
 parser.add_argument('--save-opt',default=False,type=bool,help='save optimizer or not')
 parser.add_argument('--depth',default=50, type=int,help='depth limit in beam search')
+parser.add_argument('--layers',default=1, type=int,help='how many LSTMs to stack?')
 args = parser.parse_args()
 
 #save dir
@@ -111,7 +112,7 @@ caption_generator=CaptionGenerator(
 #Model Preparation
 print("preparing caption generation models and training process")
 model=chainer.Chain()
-model.rnn=Image2CaptionDecoder(vocaburary_size=len(caption_generator.index2token),hidden_dim=args.hidden)
+model.rnn=Image2CaptionDecoder(vocaburary_size=len(caption_generator.index2token),hidden_dim=args.hidden,n_layers=args.layers)
 model.cnn=ResNet()
 model.rnn.train=True
 model.cnn.train=True
