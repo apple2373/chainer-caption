@@ -36,8 +36,8 @@ args = parser.parse_args()
 
 image_loader=Image_loader(mean='imagenet')
 with open(args.vocab, 'r') as f:
-    token2index = json.load(f)
-index2token={v:k for k,v in token2index.iteritems()}
+	token2index = json.load(f)
+index2token={v:k for k,v in token2index.items()}
 
 cnn_model=ResNet()
 serializers.load_hdf5(args.cnn_model, cnn_model)
@@ -47,12 +47,12 @@ serializers.load_hdf5(args.rnn_model, rnn_model)
 rnn_model.train = False
 
 if args.gpu >= 0:
-    xp = cuda.cupy 
-    cuda.get_device(args.gpu).use()
-    cnn_model.to_gpu()
-    rnn_model.to_gpu()
+	xp = cuda.cupy
+	cuda.get_device(args.gpu).use()
+	cnn_model.to_gpu()
+	rnn_model.to_gpu()
 else:
-    xp=np
+	xp=np
 
 batch_size=1
 hx=xp.zeros((rnn_model.n_layers, batch_size, rnn_model.hidden_dim), dtype=xp.float32)
@@ -68,7 +68,7 @@ word=[xp.array([token2index["<sos>"]],dtype=xp.int32)]
 for i in xrange(50):	
 	hx, cx, word = rnn_model(hx, cx, word)
 	word_idx=np.argmax(word[0].data)
-	print index2token[int(word_idx)],
+	print(index2token[int(word_idx)], end=' ')
 	word=[xp.array([word_idx],dtype=xp.int32)]
 	if token2index["<eos>"]==word_idx:
 		break

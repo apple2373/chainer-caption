@@ -71,7 +71,7 @@ class CaptionGenerator(object):
         else:
             self.token2index = json_file
 
-        return {v:k for k,v in self.token2index.iteritems()}
+        return {v:k for k,v in self.token2index.items()}
 
     def successor(self,current_state):
         '''
@@ -94,7 +94,7 @@ class CaptionGenerator(object):
 
         word_dist=F.softmax(next_words[0]).data[0]#possible next word distributions
         k_best_next_sentences=[]
-        for i in xrange(self.beamsize):
+        for i in range(self.beamsize):
             next_word_idx=int(xp.argmax(word_dist))
             k_best_next_sentences.append(\
                 {\
@@ -271,6 +271,6 @@ if __name__ == '__main__':
 
     captions = caption_generator.generate("../sample_imgs/COCO_val2014_000000185546.jpg")
     for caption in captions:
-        print caption["sentence"]
-        print caption["log_likelihood"]
+        print(caption["sentence"])
+        print(caption["log_likelihood"])
 

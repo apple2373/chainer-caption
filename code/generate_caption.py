@@ -55,7 +55,7 @@ def generate_caption(fname,caption_generator,args):
 
 if len(args.true_json) == 0:
     for i,fname in enumerate(os.listdir(args.dir)):
-        print i,fname
+        print(i, fname)
         captions = generate_caption(fname,caption_generator,args)
         output_annotations[fname] = captions
 
@@ -64,7 +64,7 @@ else:
         annotations=json.load(f)["annotations"]
     for i,annotation in enumerate(annotations):
         fname=annotation["image_id"]
-        print i,annotation["image_id"]
+        print(i, annotation["image_id"])
         captions = generate_caption(fname+".npz",caption_generator,args)
         output_annotations[fname]={}
         output_annotations[fname]["captions"] = captions

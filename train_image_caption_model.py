@@ -166,7 +166,7 @@ def compute_best_epoch(evaluation_log,num_epochs):
         for lang in evaluation_log.keys():
             cider_sum+=evaluation_log[lang]["val"][i]["cider"]
         ciders.append(cider_sum)
-    print ciders
+    print(ciders)
     best_epoch=np.argmax(ciders)+1#because epoch starts from 1
     return best_epoch
 
@@ -242,7 +242,7 @@ while (dataset.epoch <= args.epoch):
         caption_generator.cnn_model.train=False
         caption_generator.rnn_model=model.rnn
         caption_generator.rnn_model.train=False
-        for lang,truth in val_datasets.iteritems():
+        for lang,truth in val_datasets.items():
             scores=evaluate(args,caption_generator,evaluater,truth,lang)
             evaluation_log[lang]["val"].append(scores)
             with open(args.savedir+"/evaluation_log.json", "w") as f:
@@ -260,7 +260,7 @@ caption_generator.cnn_model.train=False
 caption_generator.rnn_model.train=False
 
 print("computing final evaluation scores")
-for lang,truth in test_datasets.iteritems():
+for lang,truth in test_datasets.items():
     scores=evaluate(args,caption_generator,evaluater,truth,lang)
     evaluation_log[lang]["test"]=scores
     evaluation_log[lang]["best_epoch"]=best_epoch

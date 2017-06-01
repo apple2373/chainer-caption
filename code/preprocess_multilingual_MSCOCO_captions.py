@@ -85,14 +85,14 @@ def create_new_caption_dataset(args,new_captions,new_cap_id=1):
     tokens=list(chain.from_iterable(texts))
     freq_count=Counter(tokens)
 
-    print "total distinct words:",len(freq_count)
+    print("total distinct words:", len(freq_count))
 
     #remove words that appears less than 5
-    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
+    id2word = [word for (word,freq) in freq_count.items() if freq >= args.cut]
     id2word.append("<ukn>")
     word2id = {id2word[i]:i for i in xrange(len(id2word))}
 
-    print "total distinct words after cutoff:",len(id2word)
+    print("total distinct words after cutoff:", len(id2word))
 
     for caption_id in captions:
         caption_tokens=captions[caption_id]['tokens']
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     common_img_ids=list(common_img_ids)
     random.shuffle(common_img_ids)
 
-    print "common image ids",len(common_img_ids)
+    print("common image ids", len(common_img_ids))
 
     # en_remainings=[]
     en_selected_captions_train=[]
@@ -160,9 +160,9 @@ if __name__ == '__main__':
     test_set=set(common_img_ids[2000:4000])
     train_set=set(common_img_ids[4000:-1])
 
-    print len(train_set)
+    print(len(train_set))
 
-    for caption_id, caption in en_captions.iteritems():
+    for caption_id, caption in en_captions.items():
         if caption["image_id"] in val_set:
             en_selected_captions_val.append(caption)
         elif caption["image_id"] in test_set:
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         elif caption["image_id"] in train_set:
             en_selected_captions_train.append(caption)
 
-    for caption_id, caption in jp_captions.iteritems():
+    for caption_id, caption in jp_captions.items():
         if caption["image_id"] in val_set:
             jp_selected_captions_val.append(caption)
         elif caption["image_id"] in test_set:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         elif caption["image_id"] in train_set:
             jp_selected_captions_train.append(caption)
 
-    print "new caption created"
+    print("new caption created")
 
     save_raw_json(en_selected_captions_train,args.outdir+args.prefix+"_en_captions_train.json",args)
     save_raw_json(en_selected_captions_val,args.outdir+args.prefix+"_en_captions_val.json",args)

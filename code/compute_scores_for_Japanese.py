@@ -24,20 +24,20 @@ predicted['262148']=['人 が オレンジ色 の シャツ を 着て 立って
 #compute blue
 scorer=Bleu(4)
 score, scores = scorer.compute_score(ground_truth, predicted)
-print scores
+print(scores)
 for i,value in enumerate(scores):
-    print i,np.mean(value)#not same. Blue does not use standard mean.some weighted geometric mean? 
+    print(i, np.mean(value))  # not same. Blue does not use standard mean.some weighted geometric mean?
 
 #meter requires other thesaurus to 
     
 #compute Rouge
 scorer=Rouge()
 score, scores = scorer.compute_score(ground_truth, predicted)
-print score
-print np.mean(scores)
+print(score)
+print(np.mean(scores))
 
 #compute CIDEr
 scorer=Cider()
 score, scores = scorer.compute_score(ground_truth, predicted)
-print score
-print np.mean(scores)
+print(score)
+print(np.mean(scores))

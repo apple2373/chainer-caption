@@ -124,6 +124,6 @@ if __name__ == '__main__':
 
     evaluater=CaptionEvaluater()
     evaluater.set_ground_truth(ground_truth)
-    print evaluater.evaluate(predicted)
+    print(evaluater.evaluate(predicted))
     #https://github.com/tylin/coco-caption/issues/5
     #Yes, CIDEr can have values till 10 (technically).

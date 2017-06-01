@@ -40,14 +40,14 @@ def create_new_caption_dataset(args,new_captions,new_cap_id=1):
     tokens=list(chain.from_iterable(texts))
     freq_count=Counter(tokens)
 
-    print "total distinct words:",len(freq_count)
+    print("total distinct words:", len(freq_count))
 
     #remove words that appears less than 5
-    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
+    id2word = [word for (word,freq) in freq_count.items() if freq >= args.cut]
     id2word.append("<ukn>")
     word2id = {id2word[i]:i for i in xrange(len(id2word))}
 
-    print "total distinct words after cutoff:",len(id2word)
+    print("total distinct words after cutoff:", len(id2word))
 
     for caption_id in captions:
         caption_tokens=captions[caption_id]['tokens']
@@ -115,10 +115,10 @@ if __name__ == '__main__':
             im2captions[img_id]=[caption]
         else:
             im2captions[img_id].append(caption)
-    f.close
+    f.close()
     img_ids=im2captions.keys()
 
-    print img_ids
+    print(img_ids)
 
     captions_train=[]
     captions_val=[]
@@ -126,9 +126,9 @@ if __name__ == '__main__':
     val_set=set(img_ids[0:10])
     train_set=set(img_ids[10:])
 
-    print len(train_set)
+    print(len(train_set))
 
-    for img_id, captions in im2captions.iteritems():
+    for img_id, captions in im2captions.items():
         for caption in captions:
             if img_id in val_set:
                 captions_val.append(caption)
@@ -136,13 +136,13 @@ if __name__ == '__main__':
                 captions_train.append(caption)
 
     for img_id in val_set:
-        print img_id
+        print(img_id)
         for cap in im2captions[img_id]:
-            print cap["caption"]
+            print(cap["caption"])
 
     # sys.exit()
 
-    print "new caption created"
+    print("new caption created")
 
     save_raw_json(captions_train,args.outdir+args.prefix+"_captions_train.json",args)
     save_raw_json(captions_val,args.outdir+args.prefix+"_captions_val.json",args)

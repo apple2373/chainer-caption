@@ -56,7 +56,7 @@ class CaptionMultiDataLoader(object):
         batch_size=int(batch_size/self.num_langs)
         batch_word_indices=[]
         imgs_list=[]
-        for lang,dataset_dic in self.all_captions_dic.iteritems():
+        for lang,dataset_dic in self.all_captions_dic.items():
             dataset=dataset_dic["dataset"]
             current_epoch=dataset.epoch
             image_features,x_batch=dataset.get_batch(batch_size,raw_image)
@@ -70,7 +70,7 @@ class CaptionMultiDataLoader(object):
 
         if all(self.epoch_changed.values()):
             self.epoch+=1
-            for lang,dataset_dic in self.all_captions_dic.iteritems():
+            for lang,dataset_dic in self.all_captions_dic.items():
                 dataset=dataset_dic["dataset"]
                 dataset.suffle_data()
                 dataset.index_count=0

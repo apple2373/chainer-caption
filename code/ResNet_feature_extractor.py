@@ -38,14 +38,14 @@ if args.gpu >= 0:
 image_files = os.listdir(args.img_dir)
 i=0
 for path in image_files:
-    name, ext = os.path.splitext(path)
-    print i,path
-    img = image_loader.load(args.img_dir+'/'+path)
-    if args.gpu >= 0:
-        img = cuda.to_gpu(img, device=args.gpu)
-    features = model(img, "feature").data
-    if args.gpu >= 0:
+	name, ext = os.path.splitext(path)
+	print(i, path)
+	img = image_loader.load(args.img_dir+'/'+path)
+	if args.gpu >= 0:
+		img = cuda.to_gpu(img, device=args.gpu)
+	features = model(img, "feature").data
+	if args.gpu >= 0:
 		features = cuda.to_cpu(features)
-    np.savez("%s/%s.npz"%(args.out_dir,name),features.reshape(2048))
-    #np.load("%s/%s.npz"%(output_directory,name))['arr_0']
-    i+=1
+	np.savez("%s/%s.npz"%(args.out_dir,name),features.reshape(2048))
+	#np.load("%s/%s.npz"%(output_directory,name))['arr_0']
+	i+=1
