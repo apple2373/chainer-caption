@@ -46,5 +46,5 @@ caption_generator=CaptionGenerator(
 
 captions = caption_generator.generate(args.img)
 for caption in captions:
-    print " ".join(caption["sentence"])
-    print caption["log_likelihood"]
+    print (" ".join(caption["sentence"]))
+    print (caption["log_likelihood"])

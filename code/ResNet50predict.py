@@ -49,4 +49,4 @@ with open('../data/synset_words.txt') as f:
 	synsets = f.read().split('\n')[:-1]
 
 for i in np.argsort(pred)[0][-1::-1][:5]:
-    print synsets[i],pred[0][i]
+	print(synsets[i], pred[0][i])

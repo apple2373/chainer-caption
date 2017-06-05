@@ -63,7 +63,7 @@ for caption in captions["annotations"]:
 
 output_annotations={}
 for i,fname in enumerate(image_feature_path_set):
-    print i,fname
+    print(i, fname)
     image_feature=np.load(fname)['arr_0'].reshape(1,2048)
     captions=caption_generator.generate_from_img_feature(image_feature)
     output_annotations[fname] = captions

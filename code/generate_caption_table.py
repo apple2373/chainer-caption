@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 if not os.path.isdir(args.output):
     os.makedirs(args.output)
-    print "made the save directory",args.output
+    print("made the save directory", args.output)
 image_dir=args.output+"/images/"
 if not os.path.isdir(image_dir):
     os.makedirs(image_dir)
@@ -51,7 +51,7 @@ html=HTMLPrinter(file_path=args.output+"/captions.html")
 i=0
 html.write('<html><body><table border="1">')
 
-for image_filename,caption in predictions.iteritems():
+for image_filename,caption in predictions.items():
     # if image_filename[-4:]=='.npz':
     #     image_filename=image_filename[0:-4].split("/")[-1]
     sys.stdout.write("\r%d" % i)

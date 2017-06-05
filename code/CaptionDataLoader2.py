@@ -63,14 +63,14 @@ if __name__ == '__main__':
         captions = json.load(f)
     dataset=CaptionDataLoader(captions,image_feature_root="../data/MSCOCO/MSCOCO_ResNet50_features/",image_root="../data/MSCOCO/MSCOCO_raw_images/")
     batch_images,batch_word_indices =  dataset.get_batch(10,raw_image=True)
-    print batch_word_indices
-    print batch_images
+    print(batch_word_indices)
+    print(batch_images)
 
     batch_image_features,batch_word_indices =  dataset.get_batch(10)
-    print batch_word_indices
-    print batch_image_features.shape
+    print(batch_word_indices)
+    print(batch_image_features.shape)
 
     dataset=CaptionDataLoader(captions,image_feature_root="../data/MSCOCO/MSCOCO_ResNet50_features",preload_all_features=True)
     batch_image_features,batch_word_indices =  dataset.get_batch(10)
-    print batch_word_indices
-    print batch_image_features.shape
+    print(batch_word_indices)
+    print(batch_image_features.shape)

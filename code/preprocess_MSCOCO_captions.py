@@ -74,14 +74,14 @@ if __name__ == '__main__':
     #     freq_count_ordered[word]=freq
     #頻度順にjsonを出したいけど、諦めたw　valueでorderするのはできない？
 
-    print "total distinct words:",len(freq_count)
+    print("total distinct words:", len(freq_count))
 
     #remove words that appears less than 5
-    id2word = [word for (word,freq) in freq_count.iteritems() if freq >= args.cut]
+    id2word = [word for (word,freq) in freq_count.items() if freq >= args.cut]
     id2word.append("<ukn>")
     word2id = {id2word[i]:i for i in xrange(len(id2word))}
 
-    print "total distinct words after cutoff:",len(id2word)
+    print("total distinct words after cutoff:", len(id2word))
 
     for caption_id in captions:
         caption_tokens=captions[caption_id]['tokens']

@@ -39,8 +39,7 @@ args = parser.parse_args()
 #save dir
 if not os.path.isdir(args.savedir):
     os.makedirs(args.savedir)
-    print "made the save directory",args.savedir
-
+    print("made the save directory", args.savedir)
 
 #Gpu Setting
 if args.gpu >= 0:
@@ -61,7 +60,7 @@ with open(args.captions, 'r') as f:
 dataset=CaptionDataLoader(captions,image_feature_path=args.image_feature_path,preload_all_features=args.preload, filename_img_id=args.filename_img_id)
 
 #Model Preparation
-print "preparing caption generation models and training process"
+print("preparing caption generation models and training process")
 model=Image2CaptionDecoder(vocaburary_size=len(index2token),hidden_dim=args.hidden)
 
 #To GPU
@@ -78,10 +77,10 @@ grad_clip = 1.0
 num_train_data=len(captions)
 
 #Start Training
-print 'training started'
+print('training started')
 
 sum_loss = 0
-print dataset.epoch
+print(dataset.epoch)
 iterraton = 1
 while (dataset.epoch <= args.epoch):
     optimizer.zero_grads()
@@ -97,7 +96,7 @@ while (dataset.epoch <= args.epoch):
     hx,cx = model.input_cnn_feature(hx,cx,image_feature)
     loss = model(hx, cx, x_batch)
 
-    print loss.data
+    print(loss.data)
     with open(args.savedir+"/real_loss.txt", "a") as f:
         f.write(str(loss.data)+'\n') 
 
@@ -110,7 +109,7 @@ while (dataset.epoch <= args.epoch):
     iterraton+=1
     
     if dataset.epoch - current_epoch > 0 or iterraton > 10000:
-        print "epoch:",dataset.epoch
+        print("epoch:", dataset.epoch)
         serializers.save_hdf5(args.savedir+"/caption_model%d.model"%current_epoch, model)
         serializers.save_hdf5(args.savedir+"/optimizer%d.model"%current_epoch, optimizer)
 

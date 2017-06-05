@@ -55,10 +55,10 @@ if __name__ == '__main__':
         captions = json.load(f)
     dataset=CaptionDataLoader(captions,image_feature_path="../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_")
     batch_image_features,batch_word_indices =  dataset.get_batch(10)
-    print batch_word_indices
-    print batch_image_features.shape
+    print(batch_word_indices)
+    print(batch_image_features.shape)
 
     dataset=CaptionDataLoader(captions,image_feature_path="../data/MSCOCO/train2014_ResNet50_features/COCO_train2014_",preload_all_features=True)
     batch_image_features,batch_word_indices =  dataset.get_batch(10)
-    print batch_word_indices
-    print batch_image_features.shape
+    print(batch_word_indices)
+    print(batch_image_features.shape)

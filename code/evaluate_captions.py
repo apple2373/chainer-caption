@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 # JSONファイル読み込み
 with open(args.predicted,'r') as f:
-    results = json.load(f)
+	results = json.load(f)
 
 #make the input to coco caption evaluator
 results_list=[]
@@ -33,7 +33,7 @@ for key in results:
 
 resFile="/tmp/coco_eval.json"
 with open(resFile, 'w') as f:
-    json.dump(results_list, f, sort_keys=True, indent=4)
+	json.dump(results_list, f, sort_keys=True, indent=4)
 
 # create coco object and cocoRes object
 coco = COCO(args.true)
@@ -51,7 +51,7 @@ cocoEval.evaluate()
 # print output evaluation scores
 results={}
 for metric, score in cocoEval.eval.items():
-    results[metric]=score
+	results[metric]=score
 
 with open(args.output, 'w') as f:
-    json.dump(results, f, sort_keys=True, indent=4)
+	json.dump(results, f, sort_keys=True, indent=4)
