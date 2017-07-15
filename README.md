@@ -18,6 +18,24 @@ If you are new, I strongly recoomend Anaconda (https://www.continuum.io/download
 pip install chainer==1.19.0 
 ```
 
+## citation:
+If you find this implementation useful, please consider to cite: 
+```
+@article{multilingual-caption-arxiv,
+title={{Using Artificial Tokens to Control Languages for Multilingual Image Caption Generation}},
+author={Satoshi Tsutsui, David Crandall},
+journal={arXiv:1706.06275},
+year={2017}
+}
+
+@inproceedings{multilingual-caption,
+author={Satoshi Tsutsui, David Crandall},
+booktitle = {CVPR Language and Vision Workshop},
+title = {{Using Artificial Tokens to Control Languages for Multilingual Image Caption Generation}},
+year = {2017}
+}
+```
+
 ## I just want to generate caption!
 OK, first, you need to download the models and other preprocessed files.
 ```
