@@ -123,7 +123,6 @@ curl -X POST -F image=@./sample_imgs/COCO_val2014_000000185546.jpg http://localh
 
 
 ## I want to train the model by myself.
-\* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 I made preprocessed files available. You can download like this.
 ```
 bash download.sh train
