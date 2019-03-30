@@ -27,8 +27,24 @@ I made pre-trained models available. For English captions, the model achieves CI
 <img src="sample.png" >
 
 ## requirements
-chainer 1.19.0  http://chainer.org
-and some more packages.  
+- python 2.7
+- CUDA 8.0
+- chainer 1.24.0  http://chainer.org
+and some more packages. Make sure to use this version of chainer. Different versions easily break the compatability.  
+
+I use `conda` to manage the environment and here's what I did. 
+```
+conda create  -y  --prefix=conda python=2.7
+conda deactivate
+conda activate ./conda
+conda install --yes numpy scipy matplotlib pandas pillow #normal tools
+CUDA_PATH=/usr/local/cuda-8.0/ pip install chainer==1.24.0 --no-cache-dir
+CUDA_PATH=/usr/local/cuda-8.0/ pip install cupy==2.0
+pip install h5py
+pip install nltk
+```
+You can also see my [`env.yml`](./data/env.yml) that is basically the exact environment of mine. 
+
 !!Warning ** Be sure to use chainer 1.19.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
 If you are new, I strongly recoomend Anaconda (https://www.continuum.io/downloads) and then install chainer.  
 ```
