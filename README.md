@@ -45,12 +45,6 @@ pip install nltk
 ```
 You can also see my [`env.yml`](./data/env.yml) that is basically the exact environment of mine. 
 
-!!Warning ** Be sure to use chainer 1.19.0. if you want to use for sure**  Chainer is notorious for breaking downward compatibility . If you have another version, no guarantee to work.  
-If you are new, I strongly recoomend Anaconda (https://www.continuum.io/downloads) and then install chainer.  
-```
-#After installing anaconda, you can install chainer, sepcifically, version1.19.0,  in this way. 
-pip install chainer==1.19.0 
-```
 
 ## citation:
 If you find this implementation useful, please consider to cite: 
