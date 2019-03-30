@@ -1,5 +1,23 @@
 # image caption generation by chainer 
 
+## Note after two years.
+I created this basically when I was almost undergrad and then things changed a lot! I feel a bit ashamed to host this dirty coding :) Well, the pretrained models are still effective and probably good if you just want to try generating captions in English/Chinese/Japanese. However, when it comes to training, probably not the best one, and many algorithmic improvements happened after I stop the maintenance of this code base… 
+
+If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it.For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). 
+
+If you still want to stay on this code, here’s some note that you should know
+
+
+- I used python 2.7 at that time, and this code may not work with python3 or higher. 
+Make sure to use chainer 1.x. I tested on 1.24.0 with CUDA 8 (cuda 9 doesn’t work with chainer 1.x ) and worked including training code. 
+
+- I put more formal description of requirements in the later section so see it and please try to use miniconda (or anaconda) to reproduce the environment. 
+
+
+- I tried to change the code to make it possible to finetune the CNN part, then I kind of failed to document it, and now I don’t remember what I was doing :)  Some files are leftovers that you don't need to use... e.g. `train_image_caption_model.py` is the leftover while `train_caption_model.py` is the good one. 
+
+## descrtiption
+
 This repository contains an implementation of typical image caption generation based on neural network (i.e. CNN + RNN). The model first extracts the image feature by CNN and then generates captions by RNN. CNN is ResNet50 and RNN is a standard LSTM .
 
 The training data is MSCOCO. I preprocessed MSCOCO images by extracting CNN features in advance. Then I trained the language model to generate captions. Not only English, I trained on Japanese and Chinese. 
