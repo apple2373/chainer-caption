@@ -30,6 +30,7 @@ I made pre-trained models available. For English captions, the model achieves CI
 - python 2.7
 - CUDA 8.0
 - chainer 1.24.0  http://chainer.org
+
 and some more packages. Make sure to use this version of chainer. Different versions easily break the compatability.  
 
 I use `conda` to manage the environment and here's what I did. 
