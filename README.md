@@ -1,7 +1,7 @@
 # image caption generation by chainer 
 
 ## Note after two years.
-I created this basically when I was almost undergrad and then things changed a lot! I feel a bit ashamed to host this dirty coding :) Well, the pretrained models are still effective and probably good if you just want to try generating captions in English/Chinese/Japanese. However, when it comes to training, probably not the best one, and many algorithmic improvements happened after I stop the maintenance of this code base… 
+I created this basically when I was almost undergrad and then things changed a lot! I feel a bit ashamed to show my dirty coding :) Well, the pretrained models are still effective and probably good if you just want to try generating captions in English/Chinese/Japanese. However, when it comes to training, probably not the best one, and many algorithmic improvements happened after I stop the maintenance of this code base… 
 
 If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it.For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). 
 
