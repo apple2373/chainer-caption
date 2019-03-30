@@ -101,9 +101,69 @@ bash download.sh train
 ```
 Then you can train like this.
 ```
+# Preprocessing
+
+cd ./code/
+
+## English
+## make sure to downalod captions_train2014.json  from the orignal MSCOCO! 
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014.json \
+--output ../data/MSCOCO/mscoco_caption_train2014_processed.json -\
+-outdic ../data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
+--outfreq ../data/MSCOCO/mscoco_caption_train2014_processed_freq.json 
+
+## Japanese from Yahoo
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/yjcaptions26k_clean.json \
+--output ../data/MSCOCO/yjcaptions26k_clean_processed.json \
+--outdic ../data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
+--outfreq ../data/MSCOCO/yjcaptions26k_clean_processed_freq.json \
+--cut 0 \
+--char True \
+
+## Japanese from machine translation
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014_jp_translation.json \
+--output ../data/MSCOCO/captions_train2014_jp_translation_processed.json \
+--outdic ../data/MSCOCO/captions_train2014_jp_translation_processed_dic.json \
+--outfreq ../data/MSCOCO/captions_train2014_jp_translation_processed_freq.json \
+--cut 5 \
+--char True \
+
+## Chinese from machine translation
+python preprocess_MSCOCO_captions.py \
+--input ../data/MSCOCO/captions_train2014_cn_translation.json \
+--output ../data/MSCOCO/captions_train2014_cn_translation_processed.json \
+--outdic ../data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
+--outfreq ../data/MSCOCO/captions_train2014_cn_translation_processed_freq.json \
+--cut 5 \
+--char True \
+
+cd ../
+
+# Train
+## train English caption 
 python train_caption_model.py --savedir ./experiment1 --epoch 40 --batch 120 --gpu -1 \
 --vocab ./data/MSCOCO/mscoco_caption_train2014_processed_dic.json \
---captions ./data/MSCOCO/MSCOCO/mscoco_caption_train2014_processed.json \
+--captions ./data/MSCOCO/mscoco_caption_train2014_processed.json \
+
+## train Chinese caption by machine translation
+python train_caption_model.py --savedir ./experiment1cn --epoch 50 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/captions_train2014_cn_translation_processed_dic.json \
+--captions ./data/MSCOCO/captions_train2014_cn_translation_processed.json\
+
+## train Japanese caption by machine translation
+python train_caption_model.py --savedir ./experiment1jp_mt --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/captions_train2014_jp_translation_processed_dic.json \
+--captions ./data/MSCOCO/captions_train2014_jp_translation_processed.json\
+--preload True
+
+## train Japanese caption by Yahoo's 
+python train_caption_model.py --savedir ./experiment1jp_yj --epoch 40 --batch 120 --gpu 0 \
+--vocab ./data/MSCOCO/yjcaptions26k_clean_processed_dic.json \
+--captions ./data/MSCOCO/yjcaptions26k_clean_processed.json \
+--preload True
 ```
 
 ## I want to train the model from my own data.
