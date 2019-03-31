@@ -220,4 +220,4 @@ python preprocess_MSCOCO_captions.py \
 Then you can use my script above for training. 
 
 ##I want to fine-tune CNN part. 
-Sorry, current implementation does not support it. I am working on it now. Maybe you can read and modify the code. 
+Sorry, this implementation does not support it.
