@@ -3,13 +3,13 @@
 ## Note after two years.
 I created this basically when I was almost undergrad and then things changed a lot! I feel a bit ashamed to show my dirty coding :) Well, the pretrained models are still effective and probably good if you just want to try generating captions in English/Chinese/Japanese. However, when it comes to training, probably not the best one, and many algorithmic improvements happened after I stop the maintenance of this code base… 
 
-If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it.For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). 
+If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it. For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). 
 
 If you still want to stay on this code, here’s some note that you should know
 
 
 - I used python 2.7 at that time, and this code may not work with python3 or higher. 
-Make sure to use chainer 1.x. I tested on 1.24.0 with CUDA 8 (cuda 9 doesn’t work with chainer 1.x ) and worked including training code. 
+Make sure to use chainer 1.x. I tested on 1.24.0 with CUDA 8 (cuda 9 and chainer 1.x doesn’t work together). 
 
 - I put more formal description of requirements in the later section so see it and please try to use miniconda (or anaconda) to reproduce the environment. 
 
