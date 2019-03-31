@@ -195,7 +195,6 @@ python train_caption_model.py --savedir ./experiment1jp_yj --epoch 40 --batch 12
 ```
 
 ## I want to train the model from my own data.
-\* I am trying to update the code so that it can fine-tune CNNs. The interface will be changed.   
 Alright, you need to do additional amount of work.
 ```
 cd code
