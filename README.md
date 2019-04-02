@@ -3,7 +3,7 @@
 ## Notes after two years.
 I created this basically when I was almost undergrad and then things changed a lot! I feel a bit ashamed to show my dirty coding :) Well, the pretrained models are still effective and probably good if you just want to try generating captions in English/Chinese/Japanese. However, when it comes to training, probably not the best one, and many algorithmic improvements happened after I stop the maintenance of this code base… 
 
-If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it. For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). 
+If you want to train image captioning, I highly recommend pytorch rather than chainer. I stopped using chainer because it always broke the compatibility when I upgrade it. For example, this code is written in chainer 1.x and never works in 2.x, 3.x, 4.x, … and 6.x (see how quickly they change the version! ). *1
 
 If you still want to stay on this code, here’s some note that you should know
 
@@ -15,6 +15,8 @@ Make sure to use chainer 1.x. I tested on 1.24.0 with CUDA 8 (cuda 9 and chainer
 
 
 - I tried to change the code to make it possible to finetune the CNN part, then I kind of failed to document it, and now I don’t remember what I was doing :)  Some files are leftovers that you don't need to use... e.g. `train_image_caption_model.py` is the leftover while `train_caption_model.py` is the good one. 
+
+ *1 This does NOT mean i do not like chainer anymore. It's still great tool to quickly prototype from scratch. I just want to say, if you want to minimize the maintenance effort for a long term, probably it is not the right tool, because of the frequent major version up that breaks the downward compatibility.
 
 ## descrtiption
 
